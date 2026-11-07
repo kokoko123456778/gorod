@@ -191,7 +191,7 @@ static u32 iconPal(char c) {
     }
 }
 enum { IC_INSPECT, IC_BULL, IC_FLAT, IC_UNDO, IC_PAUSE, IC_PLAY, IC_FF, IC_FFF, IC_LAYERS, IC_MENU, IC_POWER, IC_WATER,
-       IC_SERVICE, IC_ZONE, IC_ROAD, IC_COIN, IC_PEOPLE, IC_SMILE, IC_PIPE, IC_CLOSE, IC_PLINE, IC_TROPHY, IC_COUNT };
+       IC_SERVICE, IC_ZONE, IC_ROAD, IC_COIN, IC_PEOPLE, IC_SMILE, IC_PIPE, IC_CLOSE, IC_PLINE, IC_TROPHY, IC_CULT, IC_COUNT };
 static const char* ICONS[IC_COUNT][12] = {
     {"...kkkk.....", "..kwccck....", ".kwccccck...", ".kcccccck...", ".kcccccck...", ".kcccccck...", "..kcccck....", "...kkkkn....", ".......nn...", "........nn..", ".........nn.", "..........n."},
     {"............", "....kkkk....", "....kbbk....", "..yyyyyyyy..", "..yyyyyyyy.s", "..yyyyyyyy.s", "..kkkkkkkk.s", ".kSSSSSSSSks", ".kSkSkSkSkss", ".kSSSSSSSSk.", "..kkkkkkkk..", "............"},
@@ -215,6 +215,7 @@ static const char* ICONS[IC_COUNT][12] = {
     {"............", ".kk......kk.", ".kwk....kwk.", "..kwk..kwk..", "...kwkkwk...", "....kwwk....", "....kwwk....", "...kwkkwk...", "..kwk..kwk..", ".kwk....kwk.", ".kk......kk.", "............"},
     {".kkkkkkkkkk.", ".knnnnnnnnk.", ".kkkknnkkkk.", "....knnk....", "....knnk....", "....knnk....", "....knnk....", "....knnk....", "....knnk....", "....knnk....", "...knnnnk...", "...kkkkkk..."},
     {"kkkkkkkkkkkk", "kyyyyyyyyyyk", "kyyyyyyyyyyk", ".kyyyyyyyyk.", ".kyyyyyyyyk.", "..kyyyyyyk..", "...kyyyyk...", "....kyyk....", ".....kk.....", "....kyyk....", "..kyyyyyyk..", "..kkkkkkkk.."},
+    {".....kk.....", "...kkwwkk...", ".kkwwwwwwkk.", "kkkkkkkkkkkk", ".kwk.kwk.kwk", ".kwk.kwk.kwk", ".kwk.kwk.kwk", ".kwk.kwk.kwk", ".kwk.kwk.kwk", "kkkkkkkkkkkk", "kwwwwwwwwwwk", "kkkkkkkkkkkk"},
 };
 
 // ---------------------------------------------------------------------
@@ -223,7 +224,7 @@ static const char* ICONS[IC_COUNT][12] = {
 // ---------------------------------------------------------------------
 struct Spr { int pg, x, y, w, h, ax, ay; };
 struct Page { std::vector<u32> m, l; SDL_Texture* tm = nullptr; SDL_Texture* tl = nullptr; bool hasL = false; };
-enum { EM_SMOKE = 1, EM_STEAM, EM_BEACON, EM_ROTOR, EM_FLAG };
+enum { EM_SMOKE = 1, EM_STEAM, EM_BEACON, EM_ROTOR, EM_FLAG, EM_WHEEL };
 struct Emit { int type, x, y; };
 static std::vector<Spr> S;
 static std::vector<std::vector<Emit>> SMETA;
@@ -402,7 +403,8 @@ struct Tile {
     int8_t ox, oy; u16 pop;
 };
 enum BT { B_NONE, B_GROW, B_RUBBLE, B_WIND, B_SOLAR, B_COAL, B_NUCLEAR, B_PUMP, B_WTOWER, B_SEWAGE,
-          B_POLICE, B_FIRE, B_HOSPITAL, B_SCHOOL, B_UNIV, B_CITYHALL, B_PARKS, B_PARKL, B_FOUNTAIN, B_STADIUM, B_TVTOWER, B_COUNT };
+          B_POLICE, B_FIRE, B_HOSPITAL, B_SCHOOL, B_UNIV, B_CITYHALL, B_PARKS, B_PARKL, B_FOUNTAIN, B_STADIUM, B_TVTOWER,
+          B_GAS, B_CLINIC, B_LIBRARY, B_MUSEUM, B_THEATER, B_PLAYGROUND, B_BEACH, B_SPORTS, B_POOL, B_WHEEL, B_ZOO, B_MONUMENT, B_COUNT };
 enum { C_POLICE, C_FIRE, C_HEALTH, C_EDU, C_PARK, C_LV, NCOV };
 struct BDef {
     const char* name; int size, cost, upkeep, tier, power, water, cov, radius, strength, poll, happy;
@@ -430,10 +432,22 @@ static const BDef BD[B_COUNT] = {
     {"ФОНТАН", 1, 250, 8, 1, -1, 0, C_PARK, 6, 200, 0, 0},
     {"СТАДИОН", 3, 6000, 280, 2, -30, 0, C_PARK, 26, 255, 0, 4},
     {"ТЕЛЕБАШНЯ", 2, 15000, 200, 3, -20, 0, C_LV, 30, 255, 0, 5},
+    {"ГАЗОВАЯ ЭС", 2, 1800, 60, 1, 250, 0, -1, 0, 0, 90, 0},
+    {"ПОЛИКЛИНИКА", 1, 500, 40, 0, -4, 0, C_HEALTH, 9, 190, 0, 0},
+    {"БИБЛИОТЕКА", 1, 400, 30, 0, -3, 0, C_EDU, 8, 170, 0, 0},
+    {"МУЗЕЙ", 2, 4000, 90, 2, -8, 0, C_LV, 16, 220, 0, 3},
+    {"ТЕАТР", 2, 3500, 90, 2, -8, 0, C_LV, 14, 230, 0, 3},
+    {"ДЕТСКАЯ ПЛОЩАДКА", 1, 120, 3, 0, 0, 0, C_PARK, 5, 170, 0, 0},
+    {"ПЛЯЖ", 1, 150, 4, 0, 0, 0, C_PARK, 8, 200, 0, 0},
+    {"СПОРТПЛОЩАДКА", 2, 500, 12, 1, -1, 0, C_PARK, 9, 210, 0, 0},
+    {"БАССЕЙН", 2, 1200, 40, 1, -4, 0, C_PARK, 11, 220, 0, 0},
+    {"КОЛЕСО ОБОЗРЕНИЯ", 2, 3000, 60, 2, -6, 0, C_PARK, 16, 240, 0, 2},
+    {"ЗООПАРК", 3, 6000, 150, 2, -6, 0, C_PARK, 22, 250, 0, 3},
+    {"ПАМЯТНИК", 1, 600, 4, 1, 0, 0, C_LV, 8, 180, 0, 1},
 };
 static const char* TIER_NAME[4] = {"ДЕРЕВНЯ", "ПОСЁЛОК", "ГОРОД", "МЕГАПОЛИС"};
 static const int TIER_POP[4] = {0, 400, 2500, 15000};
-static const char* ZT_NAME[3] = {"ЖИЛАЯ", "ТОРГОВАЯ", "ПРОМЫШЛЕННАЯ"};
+static const char* ZT_NAME[4] = {"ЖИЛАЯ", "ТОРГОВАЯ", "ПРОМЫШЛЕННАЯ", "СВОБОДНАЯ"};
 static const char* DN_NAME[3] = {"НИЗКАЯ", "СРЕДНЯЯ", "ВЫСОКАЯ"};
 static const char* GROW_NAME[3][6] = {
     {"", "ДОМИК", "КОТТЕДЖ", "ПЯТИЭТАЖКА", "ДЕВЯТИЭТАЖКА", "ВЫСОТКА"},
@@ -448,8 +462,24 @@ static Tile map_[NT];
 static inline Tile& TL(int x, int y) { return map_[y * MAPN + x]; }
 static inline bool inMap(int x, int y) { return x >= 0 && y >= 0 && x < MAPN && y < MAPN; }
 static inline int effH(const Tile& t) { return (t.ter == T_WATER && t.road) ? 1 : t.h; }
-static inline int zoneType(const Tile& t) { return t.zone ? (t.zone - 1) / 3 : -1; }
-static inline int zoneDen(const Tile& t) { return t.zone ? (t.zone - 1) % 3 : 0; }
+// зоны 1..9: Ж/К/П трёх плотностей; 10..12: свободная зона (жители сами решают, что строить).
+// Для застроенной свободной зоны выбранный тип хранится в битах 4-5 поля var (0 — ещё не выбран).
+enum { NVAR = 5, Z_FREE = 10 };
+static inline int zoneFamily(int z) { return z >= Z_FREE ? 3 : (z - 1) / 3; }
+static inline int freeChoice(const Tile& t) { return (t.var >> 4) & 3; }
+static inline int zoneType(const Tile& t) {
+    if (!t.zone) return -1;
+    if (t.zone < Z_FREE) return (t.zone - 1) / 3;
+    int f = freeChoice(t); return f ? f - 1 : 3;
+}
+static inline int zoneDen(const Tile& t) { return t.zone ? (t.zone >= Z_FREE ? (t.zone - Z_FREE) % 3 : (t.zone - 1) % 3) : 0; }
+static inline int growVar(const Tile& t) { return (t.var & 15) % NVAR; }
+// особые названия для новых вариантов зданий [тип][уровень][вариант 3/4]
+static const char* SPECIAL_NAME[3][6][2] = {
+    {{0, 0}, {"ИЗБА", "ДАЧА"}, {"ТАУНХАУС", "ВИЛЛА"}, {"ПАНЕЛЬНЫЙ ДОМ", "КИРПИЧНЫЙ ДОМ"}, {"ЖИЛОЙ КОМПЛЕКС", "СТАЛИНСКИЙ ДОМ"}, {"БАШНИ-БЛИЗНЕЦЫ", "КРУГЛАЯ БАШНЯ"}},
+    {{0, 0}, {"КАФЕ", "АЗС"}, {"СУПЕРМАРКЕТ", "РЕСТОРАН"}, {"ГОСТИНИЦА", "ТОРГОВЫЙ ЦЕНТР"}, {"ОФИСНАЯ БАШНЯ", "ЗЕЛЁНЫЙ ОФИС"}, {"НЕБОСКРЁБ «СПИРАЛЬ»", "СТЕКЛЯННАЯ БАШНЯ"}},
+    {{0, 0}, {"СКЛАД", "ЛЕСОПИЛКА"}, {"ЭЛЕВАТОР", "КОТЕЛЬНАЯ"}, {"НЕФТЕБАЗА", "МЕТАЛЛУРГИЧЕСКИЙ ЦЕХ"}, {"ДАТА-ЦЕНТР", "ЛАБОРАТОРИЯ"}, {"ДАТА-ЦЕНТР", "ЛАБОРАТОРИЯ"}}};
+static const char* growName(const Tile& t);
 static inline bool isOrigin(const Tile& t) { return t.ox == 0 && t.oy == 0; }
 
 // карты симуляции
@@ -479,8 +509,11 @@ static int slot = 0; // текущий слот сохранения (0..2)
 //  Генерация всех спрайтов
 // ---------------------------------------------------------------------
 static int SP_GRASS[4][3], SP_SAND[4], SP_WATER[4], SP_CLIFFR, SP_CLIFFL, SP_CLIFFRS, SP_CLIFFLS;
-static int SP_ROAD[4][16], SP_BRIDGE[4][2], SP_ZONE[10], SP_PLINE[16], SP_PIPE[16];
-static int SP_GROW[3][6][3], SP_CONSTR[3], SP_RUBBLE, SP_BLD[B_COUNT];
+static int SP_ROAD[4][16], SP_BRIDGE[4][2], SP_ZONE[13], SP_PLINE[16], SP_PIPE[16];
+static int SP_GROW[3][6][NVAR], SP_CONSTR[3], SP_RUBBLE, SP_BLD[B_COUNT];
+struct Rng;
+static void extraR(int lvl, int var, Rng& r); static void extraC(int lvl, int var, Rng& r); static void extraI(int lvl, int var, Rng& r);
+static void genServices2();
 static int SP_TREE[4][4], SP_CAR[8][2], SP_PERSON[4], SP_PUFF, SP_FLAME[3], SP_GLOW, SP_ROTOR, SP_DIAM, SP_DOUT, SP_BEACON;
 static int SP_ICON[IC_COUNT], SP_FONT[128];
 
@@ -557,8 +590,8 @@ static void genTerrain() {
         if (!edge) cm[y * PGS + x] = 0;
     }
     // зоны: 1..9
-    const u32 ZC[3] = {RGB(70, 200, 90), RGB(70, 130, 235), RGB(235, 200, 45)};
-    for (int z = 1; z <= 9; z++) {
+    const u32 ZC[4] = {RGB(70, 200, 90), RGB(70, 130, 235), RGB(235, 200, 45), RGB(200, 110, 235)};
+    for (int z = 1; z <= 12; z++) {
         int zt = (z - 1) / 3, dn = (z - 1) % 3;
         SP_ZONE[z] = newSpr(64, 32, 32, 32);
         diamond(calpha(ZC[zt], 60 + dn * 35));
@@ -726,6 +759,7 @@ static void genGrowR(int lvl, int var) {
     u32 wall = WALL_R[(var * 2 + lvl) % 6], roof = ROOF_R[(var + lvl) % 5];
     int H = lvl == 1 ? 64 : lvl == 2 ? 76 : lvl == 3 ? 96 : lvl == 4 ? 130 : 186;
     SP_GROW[0][lvl][var] = newSpr(64, H, 32, H);
+    if (var >= 3) { extraR(lvl, var, r); return; }
     if (lvl <= 2) {
         plotGrass(); noiseSpr(0.08f, 11 + var);
         isoQuad(0.40f, 0.72f, 0, 0.52f, 0.72f, 0, 0.52f, 1.0f, 0, 0.40f, 1.0f, 0, RGB(190, 180, 160));
@@ -794,6 +828,7 @@ static void genGrowC(int lvl, int var) {
     Rng r(2000 + lvl * 17 + var * 5);
     int H = lvl == 1 ? 60 : lvl == 2 ? 70 : lvl == 3 ? 100 : lvl == 4 ? 150 : 210;
     SP_GROW[1][lvl][var] = newSpr(64, H, 32, H);
+    if (var >= 3) { extraC(lvl, var, r); return; }
     plotPave();
     const u32 BR[3] = {RGB(230, 90, 70), RGB(70, 160, 210), RGB(240, 180, 50)};
     if (lvl == 1) {
@@ -885,6 +920,7 @@ static void genGrowI(int lvl, int var) {
     int H = lvl == 1 ? 60 : lvl == 2 ? 100 : 110;
     if (lvl == 5) { SP_GROW[2][5][var] = SP_GROW[2][4][var]; return; }
     SP_GROW[2][lvl][var] = newSpr(64, H, 32, H);
+    if (var >= 3) { extraI(lvl, var, r); return; }
     plotPave(RGB(158, 152, 140)); noiseSpr(0.08f, 50 + lvl + var);
     if (lvl == 1) {
         u32 c = var == 0 ? RGB(150, 160, 170) : var == 1 ? RGB(170, 140, 110) : RGB(140, 160, 140);
@@ -1382,9 +1418,590 @@ static void genObjects() {
 static void genAllSprites() {
     S.clear(); SMETA.clear(); pages.clear(); shX = shY = shH = 0;
     genTerrain(); genRoads();
-    for (int lvl = 1; lvl <= 5; lvl++) for (int v = 0; v < 3; v++) { genGrowR(lvl, v); genGrowC(lvl, v); genGrowI(lvl, v); }
-    genConstr(); genServices(); genObjects();
+    for (int lvl = 1; lvl <= 5; lvl++) for (int v = 0; v < NVAR; v++) { genGrowR(lvl, v); genGrowC(lvl, v); genGrowI(lvl, v); }
+    genConstr(); genServices(); genServices2(); genObjects();
     SP_BLD[B_RUBBLE] = SP_RUBBLE;
+}
+
+// ---------------------------------------------------------------------
+//  Дополнительные здания: новые варианты домов и новые постройки
+// ---------------------------------------------------------------------
+static int SP_WHEEL = 0;
+// надпись пиксельным шрифтом прямо в спрайт (вывеска)
+static void sprText(int x, int y, const char* s, u32 c, u32 lit = 0) {
+    const char* p = s; int cp;
+    while ((cp = utf8next(p)) != 0) {
+        if (cp != ' ') {
+            const GlyphDef& g = GLYPHS[glyphIndex(cp)];
+            for (int j = 0; j < 7; j++) for (int i = 0; i < 5; i++) if (g.rows[j][i] == '#') { pset(x + i, y + j, c); if (lit) lset(x + i, y + j, lit); }
+        }
+        x += 6;
+    }
+}
+static int sprTextW(const char* s) { int n = 0; const char* p = s; while (utf8next(p)) n++; return n * 6 - 1; }
+// вывеска-щит на крыше (повёрнута к зрителю)
+static void signBoard(float u, float v, int z, const char* s, u32 bg, u32 fg) {
+    int w = sprTextW(s) + 4, cx = (int)isoX(u, v), cy = (int)isoY(u, v, (float)z);
+    prect(cx - w / 2 - 1, cy - 12, w + 2, 11, RGB(40, 40, 45));
+    prect(cx - w / 2, cy - 11, w, 9, bg);
+    prect(cx - 1, cy - 2, 2, 3, RGB(70, 70, 75));
+    sprText(cx - w / 2 + 2, cy - 10, s, fg, fg);
+}
+static void fence(float u0, float v0, float u1, float v1, u32 c) {
+    isoLine(u0, v0, u1, v0, 3, c); isoLine(u1, v0, u1, v1, 3, c); isoLine(u0, v1, u1, v1, 3, c); isoLine(u0, v0, u0, v1, 3, c);
+    for (float u = u0; u <= u1 + 0.01f; u += 0.1f) { isoLine(u, v1, u, v1, 4, c); isoLine(u, v0, u, v0, 4, c); }
+    for (float v = v0; v <= v1 + 0.01f; v += 0.1f) { isoLine(u1, v, u1, v, 4, c); isoLine(u0, v, u0, v, 4, c); }
+}
+static void miniCar(float u, float v, bool alongU, u32 c) {
+    float L = 0.12f, W = 0.06f;
+    if (alongU) { box(u - L, v - W, u + L, v + W, 0, 4, cshade(c, 1.1f), c, cshade(c, 0.75f)); box(u - L * 0.5f, v - W + 0.01f, u + L * 0.4f, v + W - 0.01f, 4, 3, RGB(70, 90, 120), RGB(60, 80, 110), RGB(50, 65, 90)); }
+    else { box(u - W, v - L, u + W, v + L, 0, 4, cshade(c, 1.1f), c, cshade(c, 0.75f)); box(u - W + 0.01f, v - L * 0.5f, u + W - 0.01f, v + L * 0.4f, 4, 3, RGB(70, 90, 120), RGB(60, 80, 110), RGB(50, 65, 90)); }
+}
+static void umbrella(float x, float y, u32 c) {
+    prect((int)x, (int)y - 9, 1, 9, RGB(90, 90, 90));
+    fillEllipse(x, y - 10, 6, 2.5f, c); fillEllipse(x - 1, y - 11, 3, 1.2f, cshade(c, 1.25f));
+}
+// стеклянный цилиндр-башня с поясами окон
+static void glassTower(float cx, float cy, float rad, int h, u32 c, Rng& r, int band = 6) {
+    for (int x = (int)floorf(cx - rad); x <= (int)ceilf(cx + rad); x++) {
+        float dx = (x + 0.5f - cx) / rad; if (dx < -1 || dx > 1) continue;
+        float ey = sqrtf(1 - dx * dx) * rad * 0.5f;
+        float sh = dx < -0.2f ? 1.08f : dx < 0.35f ? 0.95f : 0.72f;
+        for (int y = (int)floorf(cy - h - ey); y <= (int)ceilf(cy + ey); y++) {
+            int z = (int)(cy + ey - y);
+            bool win = (z % band) >= 2 && (z % band) <= band - 2 && z > 3;
+            u32 cc = win ? cshade(RGB(70, 110, 160), sh + 0.1f) : cshade(c, sh);
+            pset(x, y, cc);
+            if (win && ((hash2(x, z / band) & 3) == 0)) lset(x, y, LIT3);
+        }
+    }
+    fillEllipse(cx, cy - h, rad, rad * 0.5f, cshade(c, 0.8f));
+    fillEllipse(cx, cy - h, rad - 3, rad * 0.5f - 1.5f, cshade(c, 0.65f));
+}
+
+// --- жилые: варианты 3 и 4 ---
+static void extraR(int lvl, int var, Rng& r) {
+    if (lvl <= 2) {
+        isoQuad(0.40f, 0.72f, 0, 0.52f, 0.72f, 0, 0.52f, 1.0f, 0, 0.40f, 1.0f, 0, RGB(190, 180, 160));
+        isoLine(0.0f, 0.97f, 0.38f, 0.97f, 3, RGB(150, 110, 70)); isoLine(0.54f, 0.97f, 1.0f, 0.97f, 3, RGB(150, 110, 70));
+        for (float u = 0.03f; u < 1; u += 0.12f) isoLine(u, 0.97f, u, 0.97f, 4, RGB(130, 95, 60));
+    }
+    if (lvl == 1 && var == 3) { // изба
+        u32 wood = RGB(150, 96, 52);
+        Face f = box(0.24f, 0.30f, 0.70f, 0.70f, 0, 12, cshade(wood, 1.1f), wood, cshade(wood, 0.75f));
+        for (int z = 1; z < 12; z += 3) { faceRect(f, 0, 0, f.wl, z, z + 1, cshade(wood, 0.7f)); faceRect(f, 1, 0, f.wr, z, z + 1, cshade(wood, 0.55f)); }
+        faceRect(f, 0, 3, 9, 3, 10, RGB(240, 240, 228)); faceRect(f, 0, 4, 8, 4, 9, RGB(90, 130, 170), r.f() < 0.7f ? LIT1 : 0);
+        faceRect(f, 1, 4, 10, 3, 10, RGB(240, 240, 228)); faceRect(f, 1, 5, 9, 4, 9, RGB(90, 130, 170), r.f() < 0.7f ? LIT1 : 0);
+        faceRect(f, 0, 11, 14, 0, 8, RGB(100, 62, 35));
+        box(0.36f, 0.56f, 0.42f, 0.62f, 12, 12, RGB(150, 80, 60), RGB(140, 70, 50), RGB(110, 55, 40));
+        gableRoof(0.24f, 0.30f, 0.70f, 0.70f, 12, 25, RGB(96, 112, 96), wood);
+        addEmit(EM_SMOKE, (int)isoX(0.39f, 0.59f), (int)isoY(0.39f, 0.59f, 25));
+        for (int k = 0; k < 4; k++) isoQuad(0.76f, 0.08f + k * 0.2f, 0, 0.95f, 0.08f + k * 0.2f, 0, 0.95f, 0.18f + k * 0.2f, 0, 0.76f, 0.18f + k * 0.2f, 0, k & 1 ? RGB(110, 80, 50) : RGB(80, 150, 60));
+    } else if (lvl == 1) { // дача с теплицей
+        u32 wall = RGB(206, 226, 196);
+        Face f = sbox(0.12f, 0.48f, 0.52f, 0.88f, 0, 11, wall);
+        faceRect(f, 0, 3, 7, 3, 8, RGB(90, 130, 170), r.f() < 0.6f ? LIT1 : 0); faceRect(f, 1, 3, 7, 3, 8, RGB(90, 130, 170), r.f() < 0.6f ? LIT1 : 0);
+        faceRect(f, 0, 9, 12, 0, 7, RGB(110, 70, 40));
+        gableRoof(0.12f, 0.48f, 0.52f, 0.88f, 11, 20, RGB(60, 90, 150), wall);
+        Face g = box(0.58f, 0.12f, 0.92f, 0.44f, 0, 8, ARGB(220, 210, 240, 245), ARGB(200, 170, 220, 230), ARGB(200, 140, 190, 210));
+        for (int t = 0; t < g.wl; t += 4) faceRect(g, 0, t, t + 1, 0, 8, RGB(240, 250, 250));
+        for (int t = 0; t < g.wr; t += 4) faceRect(g, 1, t, t + 1, 0, 8, RGB(220, 235, 240));
+        for (int k = 0; k < 3; k++) fillEllipse(isoX(0.66f + k * 0.09f, 0.62f), isoY(0.66f + k * 0.09f, 0.62f, 1), 3, 1.5f, RGB(70, 150, 60));
+        treeAt(isoX(0.25f, 0.2f), isoY(0.25f, 0.2f, 0), 1, 1, 0.8f);
+    } else if (lvl == 2 && var == 3) { // таунхаус
+        const u32 W2[2] = {RGB(214, 176, 140), RGB(176, 196, 214)}, R2[2] = {RGB(140, 60, 45), RGB(70, 80, 110)};
+        for (int k = 0; k < 2; k++) {
+            float u0 = 0.10f + k * 0.40f, u1 = u0 + 0.40f;
+            Face f = sbox(u0, 0.25f, u1, 0.75f, 0, 20, W2[k]);
+            for (int fl = 0; fl < 2; fl++) for (int t = 3; t + 3 <= f.wl - 2; t += 6) faceRect(f, 0, t, t + 3, 3 + fl * 9, 8 + fl * 9, RGB(90, 130, 170), r.f() < 0.5f ? LIT1 : 0);
+            faceRect(f, 0, f.wl - 5, f.wl - 2, 0, 8, RGB(100, 66, 40));
+            if (k == 1) for (int fl = 0; fl < 2; fl++) for (int t = 3; t + 3 <= f.wr - 2; t += 6) faceRect(f, 1, t, t + 3, 3 + fl * 9, 8 + fl * 9, RGB(90, 130, 170), r.f() < 0.5f ? LIT1 : 0);
+            gableRoof(u0, 0.25f, u1, 0.75f, 20, 30, R2[k], W2[k]);
+        }
+    } else if (lvl == 2) { // вилла с бассейном
+        u32 w = RGB(244, 244, 238);
+        Face f = sbox(0.12f, 0.12f, 0.58f, 0.58f, 0, 24, w);
+        faceRect(f, 0, 2, f.wl - 2, 13, 21, RGB(60, 90, 120), LIT2); faceRect(f, 1, 2, f.wr - 2, 3, 10, RGB(60, 90, 120), LIT2);
+        faceRect(f, 0, 2, 7, 0, 9, RGB(130, 100, 70));
+        box(0.10f, 0.10f, 0.60f, 0.60f, 24, 2, RGB(90, 90, 92), RGB(80, 80, 82), RGB(60, 60, 62));
+        Face g = sbox(0.12f, 0.58f, 0.40f, 0.86f, 0, 12, RGB(200, 160, 120));
+        faceRect(g, 0, 2, g.wl - 2, 2, 9, RGB(60, 90, 120), LIT2); (void)g;
+        isoQuad(0.62f, 0.15f, 0, 0.92f, 0.15f, 0, 0.92f, 0.80f, 0, 0.62f, 0.80f, 0, RGB(230, 225, 210));
+        isoQuad(0.66f, 0.20f, 0, 0.88f, 0.20f, 0, 0.88f, 0.75f, 0, 0.66f, 0.75f, 0, RGB(70, 170, 220));
+        isoLine(0.70f, 0.30f, 0.84f, 0.30f, 0, RGB(170, 230, 250));
+        treeAt(isoX(0.55f, 0.88f), isoY(0.55f, 0.88f, 0), 1, 1, 0.8f);
+    } else if (lvl == 3 && var == 3) { // панельный дом
+        plotPave(RGB(170, 170, 162));
+        u32 c = RGB(198, 198, 192);
+        Face f = sbox(0.10f, 0.18f, 0.90f, 0.82f, 0, 50, c);
+        for (int k = 1; k < 5; k++) { faceRect(f, 0, 0, f.wl, k * 10, k * 10 + 1, cshade(c, 0.8f)); faceRect(f, 1, 0, f.wr, k * 10, k * 10 + 1, cshade(c, 0.6f)); }
+        windows(f, 0, 0, 5, 10, 4, 5, 6, 3, RGB(70, 100, 140), r, 0.55f);
+        windows(f, 1, 0, 5, 10, 4, 5, 6, 3, RGB(70, 100, 140), r, 0.55f);
+        for (int k = 1; k < 5; k++) for (int t = 8; t + 8 < f.wl; t += 12) faceRect(f, 0, t, t + 8, k * 10, k * 10 + 3, RGB(150, 160, 170));
+        flatRoof(0.10f, 0.18f, 0.90f, 0.82f, 50, RGB(110, 110, 112));
+        box(0.3f, 0.4f, 0.4f, 0.5f, 50, 6, RGB(150, 150, 150), RGB(140, 140, 140), RGB(110, 110, 110));
+    } else if (lvl == 3) { // кирпичный дом с балконами
+        plotPave(RGB(170, 170, 162));
+        u32 c = RGB(172, 84, 62);
+        Face f = sbox(0.12f, 0.15f, 0.88f, 0.85f, 0, 48, c);
+        windows(f, 0, 0, 4, 12, 4, 6, 8, 3, RGB(70, 100, 140), r, 0.55f);
+        windows(f, 1, 0, 4, 12, 4, 6, 8, 3, RGB(70, 100, 140), r, 0.55f);
+        for (int k = 1; k < 4; k++) for (int t = 2; t + 6 <= f.wl - 2; t += 8) faceRect(f, 0, t - 1, t + 6, k * 12, k * 12 + 2, RGB(235, 235, 228));
+        gableRoof(0.12f, 0.15f, 0.88f, 0.85f, 48, 60, RGB(80, 80, 90), c);
+    } else if (lvl == 4 && var == 3) { // жилой комплекс (Г-образный)
+        plotPave(RGB(170, 170, 162));
+        u32 a = RGB(232, 222, 200), b = RGB(200, 214, 226);
+        Face f = sbox(0.08f, 0.08f, 0.92f, 0.42f, 0, 70, a);
+        windows(f, 0, 0, 8, 8, 3, 5, 5, 2, RGB(70, 100, 140), r, 0.5f); windows(f, 1, 0, 8, 8, 3, 5, 5, 2, RGB(70, 100, 140), r, 0.5f);
+        flatRoof(0.08f, 0.08f, 0.92f, 0.42f, 70, RGB(110, 108, 104));
+        Face g = sbox(0.08f, 0.46f, 0.46f, 0.92f, 0, 90, b);
+        windows(g, 0, 0, 11, 8, 3, 5, 5, 2, RGB(70, 100, 140), r, 0.5f); windows(g, 1, 0, 11, 8, 3, 5, 5, 2, RGB(70, 100, 140), r, 0.5f);
+        flatRoof(0.08f, 0.46f, 0.46f, 0.92f, 90, RGB(110, 108, 104));
+        isoQuad(0.52f, 0.5f, 0, 0.92f, 0.5f, 0, 0.92f, 0.92f, 0, 0.52f, 0.92f, 0, RGB(98, 160, 64));
+        treeAt(isoX(0.72f, 0.72f), isoY(0.72f, 0.72f, 0), 0, 1, 0.9f);
+    } else if (lvl == 4) { // сталинский дом со шпилем
+        plotPave(RGB(180, 176, 166));
+        u32 c = RGB(226, 208, 168);
+        Face f = sbox(0.10f, 0.10f, 0.90f, 0.90f, 0, 58, c);
+        windows(f, 0, 6, 6, 8, 4, 5, 7, 3, RGB(80, 100, 130), r, 0.6f); windows(f, 1, 6, 6, 8, 4, 5, 7, 3, RGB(80, 100, 130), r, 0.6f);
+        faceRect(f, 0, 0, f.wl, 0, 6, cshade(c, 0.75f)); faceRect(f, 1, 0, f.wr, 0, 6, cshade(c, 0.6f));
+        flatRoof(0.10f, 0.10f, 0.90f, 0.90f, 58, RGB(140, 110, 90));
+        Face g = sbox(0.28f, 0.28f, 0.72f, 0.72f, 58, 22, c);
+        windows(g, 0, 0, 2, 10, 3, 5, 6, 3, RGB(80, 100, 130), r, 0.6f);
+        flatRoof(0.28f, 0.28f, 0.72f, 0.72f, 80, RGB(140, 110, 90));
+        sbox(0.4f, 0.4f, 0.6f, 0.6f, 80, 10, c);
+        float sx = isoX(0.5f, 0.5f), sy = isoY(0.5f, 0.5f, 90);
+        for (int k = 0; k < 18; k++) { int w = k < 6 ? 2 : 1; prect((int)sx - w / 2, (int)sy - k, w, 1, RGB(200, 170, 70)); }
+        pset((int)sx, (int)sy - 19, RGB(230, 40, 40)); pset((int)sx - 1, (int)sy - 19, RGB(230, 40, 40)); pset((int)sx, (int)sy - 20, RGB(230, 40, 40));
+        lset((int)sx, (int)sy - 19, RGB(255, 80, 60));
+    } else if (lvl == 5 && var == 3) { // башни-близнецы
+        plotPave(RGB(176, 176, 170));
+        u32 c = RGB(210, 214, 222);
+        Face p = sbox(0.06f, 0.06f, 0.94f, 0.94f, 0, 14, RGB(150, 160, 175));
+        faceRect(p, 0, 1, p.wl - 1, 2, 11, RGB(110, 160, 210), LIT2); faceRect(p, 1, 1, p.wr - 1, 2, 11, RGB(90, 140, 190), LIT2);
+        flatRoof(0.06f, 0.06f, 0.94f, 0.94f, 14, RGB(120, 160, 110));
+        Face a = sbox(0.12f, 0.12f, 0.46f, 0.46f, 14, 138, c);
+        windows(a, 0, 0, 23, 6, 2, 4, 4, 1, RGB(70, 100, 140), r, 0.5f); windows(a, 1, 0, 23, 6, 2, 4, 4, 1, RGB(70, 100, 140), r, 0.5f);
+        flatRoof(0.12f, 0.12f, 0.46f, 0.46f, 152, RGB(100, 100, 105));
+        Face b = sbox(0.54f, 0.54f, 0.88f, 0.88f, 14, 120, c);
+        windows(b, 0, 0, 20, 6, 2, 4, 4, 1, RGB(70, 100, 140), r, 0.5f); windows(b, 1, 0, 20, 6, 2, 4, 4, 1, RGB(70, 100, 140), r, 0.5f);
+        flatRoof(0.54f, 0.54f, 0.88f, 0.88f, 134, RGB(100, 100, 105));
+        addEmit(EM_BEACON, (int)isoX(0.29f, 0.29f), (int)isoY(0.29f, 0.29f, 154));
+    } else { // круглая башня
+        plotPave(RGB(176, 176, 170));
+        isoQuad(0, 0, 0, 1, 0, 0, 1, 0.12f, 0, 0, 0.12f, 0, RGB(98, 160, 64));
+        float cx = isoX(0.5f, 0.5f), cy = isoY(0.5f, 0.5f, 0);
+        glassTower(cx, cy, 21, 140, RGB(236, 232, 222), r, 7);
+        prect((int)cx, (int)cy - 162, 1, 22, RGB(90, 90, 95));
+        addEmit(EM_BEACON, (int)cx, (int)cy - 163);
+    }
+}
+// --- торговые: варианты 3 и 4 ---
+static void extraC(int lvl, int var, Rng& r) {
+    if (lvl == 1 && var == 3) { // кафе
+        plotPave(RGB(196, 186, 170));
+        Face f = sbox(0.25f, 0.20f, 0.72f, 0.58f, 0, 13, RGB(240, 226, 196));
+        faceRect(f, 0, 2, f.wl - 2, 2, 9, RGB(140, 180, 200), LIT1);
+        faceRect(f, 1, 3, 7, 0, 8, RGB(110, 70, 40));
+        flatRoof(0.25f, 0.20f, 0.72f, 0.58f, 13, RGB(120, 70, 50));
+        for (int k = 0; k < 5; k++) { float a = 0.25f + k * 0.094f; isoQuad(a, 0.58f, 12, a + 0.094f, 0.58f, 12, a + 0.094f, 0.70f, 9, a, 0.70f, 9, (k & 1) ? RGB(250, 250, 240) : RGB(40, 140, 90)); }
+        umbrella(isoX(0.35f, 0.85f), isoY(0.35f, 0.85f, 0), RGB(230, 80, 70));
+        umbrella(isoX(0.70f, 0.85f), isoY(0.70f, 0.85f, 0), RGB(250, 200, 60));
+        signBoard(0.48f, 0.39f, 13, "КАФЕ", RGB(40, 120, 80), RGB(255, 240, 200));
+    } else if (lvl == 1) { // АЗС
+        plotPave(RGB(120, 122, 126));
+        for (int k = 0; k < 2; k++) box(0.30f + k * 0.28f, 0.34f, 0.38f + k * 0.28f, 0.42f, 0, 7, RGB(230, 230, 230), RGB(220, 60, 50), RGB(180, 40, 35));
+        const float pu[4] = {0.12f, 0.70f, 0.70f, 0.12f}, pvv[4] = {0.18f, 0.18f, 0.58f, 0.58f};
+        for (int k = 0; k < 4; k++) { float x = isoX(pu[k], pvv[k]), y = isoY(pu[k], pvv[k], 0); prect((int)x, (int)y - 15, 1, 15, RGB(200, 200, 205)); }
+        box(0.10f, 0.15f, 0.74f, 0.62f, 15, 3, RGB(245, 245, 245), RGB(220, 50, 45), RGB(180, 40, 35));
+        for (int t = 0; t < 40; t += 3) { float u = 0.12f + t * 0.015f; lset((int)isoX(u, 0.62f), (int)isoY(u, 0.62f, 15), RGB(255, 255, 230)); }
+        Face k2 = sbox(0.74f, 0.66f, 0.95f, 0.95f, 0, 10, RGB(240, 240, 235));
+        faceRect(k2, 0, 1, k2.wl - 1, 2, 8, RGB(120, 170, 210), LIT2);
+        float sx = isoX(0.86f, 0.14f), sy = isoY(0.86f, 0.14f, 0);
+        prect((int)sx, (int)sy - 22, 1, 22, RGB(120, 120, 120));
+        prect((int)sx - 5, (int)sy - 30, 11, 9, RGB(220, 50, 45)); sprText((int)sx - 4, (int)sy - 29, "АЗС", RGB(255, 255, 255), RGB(255, 230, 200));
+    } else if (lvl == 2 && var == 3) { // супермаркет
+        plotPave(RGB(120, 122, 126));
+        Face f = sbox(0.08f, 0.08f, 0.92f, 0.52f, 0, 18, RGB(236, 236, 230));
+        faceRect(f, 0, 2, f.wl - 2, 2, 10, RGB(120, 170, 205), LIT2);
+        faceRect(f, 0, 0, f.wl, 12, 16, RGB(230, 120, 30)); faceRect(f, 1, 0, f.wr, 12, 16, RGB(190, 95, 25));
+        flatRoof(0.08f, 0.08f, 0.92f, 0.52f, 18, RGB(150, 150, 148));
+        for (float u = 0.12f; u < 0.9f; u += 0.16f) isoLine(u, 0.62f, u, 0.92f, 0, RGB(235, 235, 235));
+        const u32 cc[3] = {RGB(200, 50, 45), RGB(60, 90, 200), RGB(240, 240, 235)};
+        for (int k = 0; k < 3; k++) if (r.f() < 0.8f) miniCar(0.20f + k * 0.32f, 0.77f, false, cc[k]);
+    } else if (lvl == 2) { // ресторан
+        plotPave(RGB(196, 186, 170));
+        u32 c = RGB(140, 50, 45);
+        Face f = sbox(0.18f, 0.12f, 0.82f, 0.62f, 0, 22, c);
+        windows(f, 0, 2, 2, 10, 4, 6, 7, 3, RGB(250, 210, 140), r, 0.9f, LIT1);
+        windows(f, 1, 2, 2, 10, 4, 6, 7, 3, RGB(250, 210, 140), r, 0.9f, LIT1);
+        flatRoof(0.18f, 0.12f, 0.82f, 0.62f, 22, RGB(80, 60, 55));
+        isoQuad(0.18f, 0.62f, 10, 0.82f, 0.62f, 10, 0.82f, 0.78f, 6, 0.18f, 0.78f, 6, RGB(220, 190, 120));
+        for (int k = 0; k < 3; k++) { float x = isoX(0.3f + k * 0.2f, 0.88f), y = isoY(0.3f + k * 0.2f, 0.88f, 0); fillEllipse(x, y - 2, 3, 1.5f, RGB(250, 250, 245)); prect((int)x, (int)y - 2, 1, 2, RGB(80, 80, 80)); }
+    } else if (lvl == 3 && var == 3) { // гостиница
+        plotPave();
+        u32 c = RGB(232, 218, 190);
+        Face f = sbox(0.14f, 0.14f, 0.86f, 0.86f, 0, 58, c);
+        faceRect(f, 0, 0, f.wl, 0, 8, RGB(120, 60, 50)); faceRect(f, 1, 0, f.wr, 0, 8, RGB(100, 50, 40));
+        faceRect(f, 0, 6, f.wl - 6, 1, 7, RGB(250, 220, 150), LIT1);
+        windows(f, 0, 8, 7, 7, 3, 4, 5, 2, RGB(80, 110, 150), r, 0.65f, LIT1);
+        windows(f, 1, 8, 7, 7, 3, 4, 5, 2, RGB(80, 110, 150), r, 0.65f, LIT1);
+        flatRoof(0.14f, 0.14f, 0.86f, 0.86f, 58, RGB(110, 100, 95));
+        signBoard(0.5f, 0.5f, 58, "ОТЕЛЬ", RGB(30, 30, 60), RGB(255, 220, 90));
+    } else if (lvl == 3) { // торговый центр
+        plotPave();
+        u32 c = RGB(214, 214, 222);
+        Face f = sbox(0.05f, 0.05f, 0.95f, 0.95f, 0, 28, c);
+        faceRect(f, 0, 2, f.wl - 2, 2, 12, RGB(120, 170, 210), LIT2); faceRect(f, 1, 2, f.wr - 2, 2, 12, RGB(100, 150, 190), LIT2);
+        for (int t = 4; t < f.wl - 4; t += 10) faceRect(f, 0, t, t + 4, 15, 26, (t / 10) & 1 ? RGB(230, 80, 90) : RGB(80, 160, 220));
+        flatRoof(0.05f, 0.05f, 0.95f, 0.95f, 28, RGB(150, 150, 150));
+        Face a = box(0.30f, 0.30f, 0.70f, 0.70f, 28, 14, RGB(180, 220, 240), RGB(150, 200, 230), RGB(110, 160, 200));
+        for (int t = 0; t < a.wl; t += 4) faceRect(a, 0, t, t + 1, 0, 14, RGB(230, 240, 250), LIT3);
+        signBoard(0.75f, 0.25f, 28, "ТЦ", RGB(200, 40, 60), RGB(255, 255, 255));
+    } else if (lvl == 4 && var == 3) { // офисная башня с вертолётной площадкой
+        plotPave();
+        u32 g = RGB(96, 110, 128);
+        Face f = box(0.14f, 0.14f, 0.86f, 0.86f, 0, 104, cshade(g, 1.1f), g, cshade(g, 0.72f));
+        for (int k = 0; k < 13; k++) {
+            faceRect(f, 0, 0, f.wl, k * 8 + 1, k * 8 + 6, RGB(140, 180, 210), r.f() < 0.5f ? LIT3 : 0);
+            faceRect(f, 1, 0, f.wr, k * 8 + 1, k * 8 + 6, RGB(100, 140, 175), r.f() < 0.5f ? LIT3 : 0);
+        }
+        box(0.14f, 0.14f, 0.86f, 0.86f, 104, 2, RGB(70, 75, 85), RGB(60, 65, 75), RGB(45, 50, 58));
+        float cx = isoX(0.5f, 0.5f), cy = isoY(0.5f, 0.5f, 106);
+        fillEllipse(cx, cy, 15, 7.5f, RGB(60, 62, 66)); fillEllipse(cx, cy, 13, 6.5f, RGB(80, 82, 86));
+        prect((int)cx - 4, (int)cy - 3, 1, 7, RGB(250, 220, 60)); prect((int)cx + 3, (int)cy - 3, 1, 7, RGB(250, 220, 60)); prect((int)cx - 4, (int)cy, 8, 1, RGB(250, 220, 60));
+        addEmit(EM_BEACON, (int)cx - 14, (int)cy); addEmit(EM_BEACON, (int)cx + 14, (int)cy);
+    } else if (lvl == 4) { // «зелёный» офис
+        plotPave();
+        u32 g = RGB(110, 160, 140);
+        Face f = box(0.12f, 0.12f, 0.88f, 0.88f, 0, 72, cshade(g, 1.1f), g, cshade(g, 0.72f));
+        for (int k = 0; k < 9; k++) { faceRect(f, 0, 0, f.wl, k * 8 + 7, k * 8 + 8, RGB(60, 120, 60)); faceRect(f, 1, 0, f.wr, k * 8 + 7, k * 8 + 8, RGB(50, 100, 50)); }
+        windows(f, 0, 0, 9, 8, 3, 5, 4, 1, RGB(170, 220, 210), r, 0.5f, LIT3); windows(f, 1, 0, 9, 8, 3, 5, 4, 1, RGB(140, 190, 180), r, 0.5f, LIT3);
+        box(0.12f, 0.12f, 0.88f, 0.88f, 72, 0, RGB(90, 150, 70), 0, 0);
+        Face h = box(0.22f, 0.22f, 0.78f, 0.78f, 72, 36, cshade(g, 1.15f), cshade(g, 1.0f), cshade(g, 0.75f));
+        windows(h, 0, 0, 4, 9, 3, 5, 4, 1, RGB(170, 220, 210), r, 0.5f, LIT3); windows(h, 1, 0, 4, 9, 3, 5, 4, 1, RGB(140, 190, 180), r, 0.5f, LIT3);
+        box(0.22f, 0.22f, 0.78f, 0.78f, 108, 0, RGB(90, 150, 70), 0, 0);
+        for (int k = 0; k < 3; k++) fillEllipse(isoX(0.3f + k * 0.2f, 0.35f), isoY(0.3f + k * 0.2f, 0.35f, 110), 4, 3, RGB(60, 130, 50));
+        for (int k = 0; k < 3; k++) fillEllipse(isoX(0.17f, 0.3f + k * 0.2f), isoY(0.17f, 0.3f + k * 0.2f, 75), 3, 2, RGB(70, 140, 55));
+    } else if (lvl == 5 && var == 3) { // небоскрёб «Спираль»
+        plotPave();
+        u32 g = RGB(150, 170, 196);
+        for (int k = 0; k < 10; k++) {
+            float a = (k & 1) ? 0.20f : 0.24f, b = 1.0f - a;
+            float sh = (k & 1) ? 0.03f : -0.03f;
+            Face f = box(a + sh, a - sh, b + sh, b - sh, k * 16, 16, cshade(g, 1.1f), cshade(g, 1.0f), cshade(g, 0.72f));
+            for (int z = 2; z < 15; z += 4) { faceRect(f, 0, 1, f.wl - 1, z, z + 2, RGB(70, 110, 160), r.f() < 0.5f ? LIT3 : 0); faceRect(f, 1, 1, f.wr - 1, z, z + 2, RGB(55, 90, 135), r.f() < 0.5f ? LIT3 : 0); }
+        }
+        box(0.24f, 0.24f, 0.76f, 0.76f, 160, 0, RGB(120, 130, 140), 0, 0);
+        isoTri(0.30f, 0.30f, 160, 0.70f, 0.30f, 160, 0.5f, 0.5f, 178, RGB(200, 210, 225));
+        isoTri(0.70f, 0.30f, 160, 0.70f, 0.70f, 160, 0.5f, 0.5f, 178, RGB(150, 160, 175));
+        isoTri(0.30f, 0.70f, 160, 0.70f, 0.70f, 160, 0.5f, 0.5f, 178, RGB(180, 190, 205));
+        addEmit(EM_BEACON, (int)isoX(0.5f, 0.5f), (int)isoY(0.5f, 0.5f, 179));
+    } else { // стеклянная башня
+        plotPave();
+        float cx = isoX(0.5f, 0.5f), cy = isoY(0.5f, 0.5f, 0);
+        glassTower(cx, cy, 24, 160, RGB(120, 170, 210), r, 5);
+        prect((int)cx, (int)cy - 186, 1, 26, RGB(200, 200, 210));
+        addEmit(EM_BEACON, (int)cx, (int)cy - 187);
+    }
+}
+// --- промышленные: варианты 3 и 4 ---
+static void extraI(int lvl, int var, Rng& r) {
+    plotPave(RGB(158, 152, 140)); noiseSpr(0.08f, 150 + lvl * 3 + var);
+    if (lvl == 1 && var == 3) { // склад с арочной крышей
+        u32 c = RGB(150, 156, 160);
+        Face f = sbox(0.12f, 0.22f, 0.88f, 0.72f, 0, 10, c);
+        faceRect(f, 0, 6, 14, 0, 8, RGB(90, 90, 95)); faceRect(f, 0, 18, 26, 0, 8, RGB(90, 90, 95));
+        for (int k = 0; k < 8; k++) {
+            float v0 = 0.22f + k * 0.0625f, v1 = v0 + 0.0625f;
+            float z0 = 10 + 8 * sinf((k) / 8.0f * 3.1416f), z1 = 10 + 8 * sinf((k + 1) / 8.0f * 3.1416f);
+            isoQuad(0.12f, v0, z0, 0.88f, v0, z0, 0.88f, v1, z1, 0.12f, v1, z1, cshade(c, 0.75f + k * 0.05f));
+        }
+        box(0.20f, 0.78f, 0.62f, 0.90f, 0, 8, RGB(230, 230, 230), RGB(220, 220, 220), RGB(180, 180, 180));
+        box(0.62f, 0.78f, 0.74f, 0.90f, 0, 6, RGB(60, 110, 200), RGB(50, 90, 180), RGB(40, 70, 150));
+    } else if (lvl == 1) { // лесопилка
+        float pu[4] = {0.15f, 0.62f, 0.62f, 0.15f}, pvv[4] = {0.15f, 0.15f, 0.55f, 0.55f};
+        for (int k = 0; k < 4; k++) { float x = isoX(pu[k], pvv[k]), y = isoY(pu[k], pvv[k], 0); prect((int)x, (int)y - 13, 2, 13, RGB(110, 80, 50)); }
+        box(0.12f, 0.12f, 0.65f, 0.58f, 13, 2, RGB(120, 120, 125), RGB(100, 100, 105), RGB(80, 80, 85));
+        box(0.25f, 0.3f, 0.5f, 0.4f, 0, 5, RGB(150, 150, 155), RGB(120, 120, 125), RGB(90, 90, 95));
+        for (int row = 0; row < 3; row++) for (int k = 0; k < 4 - row; k++) {
+            float x = isoX(0.80f, 0.20f) - 6 + k * 4 + row * 2, y = isoY(0.80f, 0.20f, 0) - row * 3.5f;
+            fillEllipse(x, y, 2.2f, 2.0f, RGB(150, 100, 55)); pset((int)x, (int)y, RGB(200, 160, 100));
+        }
+        for (int row = 0; row < 2; row++) for (int k = 0; k < 4 - row; k++) {
+            float x = isoX(0.50f, 0.80f) - 6 + k * 4 + row * 2, y = isoY(0.50f, 0.80f, 0) - row * 3.5f;
+            fillEllipse(x, y, 2.2f, 2.0f, RGB(160, 110, 60)); pset((int)x, (int)y, RGB(210, 170, 110));
+        }
+    } else if (lvl == 2 && var == 3) { // элеватор
+        for (int k = 0; k < 3; k++) {
+            float u = 0.25f + k * 0.2f, v = 0.55f;
+            cylinder(isoX(u, v), isoY(u, v, 0), 7, 44, RGB(214, 210, 200), RGB(190, 186, 176));
+            fillEllipse(isoX(u, v), isoY(u, v, 44) - 2, 7, 4, RGB(170, 166, 156));
+        }
+        Face t = sbox(0.70f, 0.20f, 0.88f, 0.40f, 0, 58, RGB(196, 190, 176));
+        windows(t, 0, 30, 2, 10, 2, 4, 4, 2, RGB(90, 120, 150), r, 0.6f);
+        flatRoof(0.70f, 0.20f, 0.88f, 0.40f, 58, RGB(120, 110, 100));
+        isoLine(0.25f, 0.55f, 0.70f, 0.30f, 50, RGB(110, 110, 115)); isoLine(0.25f, 0.55f, 0.70f, 0.30f, 49, RGB(90, 90, 95));
+        box(0.15f, 0.80f, 0.45f, 0.92f, 0, 7, RGB(220, 180, 60), RGB(200, 160, 40), RGB(160, 120, 30));
+    } else if (lvl == 2) { // котельная
+        u32 c = RGB(160, 80, 60);
+        Face f = sbox(0.12f, 0.22f, 0.66f, 0.84f, 0, 24, c);
+        windows(f, 0, 8, 1, 12, 3, 8, 6, 3, RGB(250, 170, 80), r, 0.8f, RGB(255, 170, 90));
+        windows(f, 1, 8, 1, 12, 3, 8, 6, 3, RGB(250, 170, 80), r, 0.8f, RGB(255, 170, 90));
+        flatRoof(0.12f, 0.22f, 0.66f, 0.84f, 24, RGB(100, 90, 85));
+        chimney(0.82f, 0.32f, 0, 66, 4, true);
+        cylinder(isoX(0.82f, 0.78f), isoY(0.82f, 0.78f, 0), 5, 14, RGB(170, 170, 175), RGB(150, 150, 155));
+    } else if (lvl == 3 && var == 3) { // нефтебаза
+        const float tu[3] = {0.28f, 0.68f, 0.28f}, tv[3] = {0.28f, 0.28f, 0.70f};
+        for (int k = 0; k < 3; k++) {
+            float x = isoX(tu[k], tv[k]), y = isoY(tu[k], tv[k], 0);
+            cylinder(x, y, 11, 16, RGB(225, 228, 232), RGB(205, 208, 212));
+            prect((int)x - 11, (int)y - 9, 22, 1, RGB(200, 60, 50));
+        }
+        isoLine(0.28f, 0.28f, 0.68f, 0.28f, 4, RGB(120, 120, 125)); isoLine(0.28f, 0.28f, 0.28f, 0.70f, 4, RGB(120, 120, 125));
+        isoLine(0.68f, 0.28f, 0.80f, 0.80f, 3, RGB(120, 120, 125));
+        float fx = isoX(0.82f, 0.82f), fy = isoY(0.82f, 0.82f, 0);
+        prect((int)fx, (int)fy - 62, 2, 62, RGB(160, 160, 165));
+        for (int k = 0; k < 6; k++) { pset((int)fx + (k % 2), (int)fy - 63 - k, k < 3 ? RGB(255, 200, 60) : RGB(240, 110, 30)); lset((int)fx + (k % 2), (int)fy - 63 - k, RGB(255, 150, 50)); }
+        Face o = sbox(0.62f, 0.62f, 0.78f, 0.78f, 0, 9, RGB(230, 230, 225)); faceRect(o, 0, 1, 4, 3, 7, RGB(120, 170, 210), LIT2);
+    } else if (lvl == 3) { // металлургический цех
+        u32 c = RGB(96, 100, 110);
+        chimney(0.86f, 0.20f, 0, 72, 4, true); chimney(0.86f, 0.42f, 0, 64, 4, true);
+        Face f = sbox(0.08f, 0.08f, 0.72f, 0.92f, 0, 36, c);
+        for (int t = 0; t < f.wl; t += 3) faceRect(f, 0, t, t + 1, 0, 36, cshade(c, 0.85f));
+        faceRect(f, 0, 6, 16, 0, 14, RGB(255, 140, 40), RGB(255, 150, 60));
+        windows(f, 1, 22, 1, 10, 3, 5, 5, 2, RGB(250, 180, 90), r, 0.7f, RGB(255, 170, 80));
+        isoQuad(0.08f, 0.08f, 36, 0.72f, 0.08f, 36, 0.72f, 0.50f, 44, 0.08f, 0.50f, 44, cshade(c, 0.8f));
+        isoQuad(0.08f, 0.92f, 36, 0.72f, 0.92f, 36, 0.72f, 0.50f, 44, 0.08f, 0.50f, 44, cshade(c, 1.05f));
+        isoTri(0.72f, 0.08f, 36, 0.72f, 0.92f, 36, 0.72f, 0.50f, 44, cshade(c, 0.65f));
+        addEmit(EM_SMOKE, (int)isoX(0.4f, 0.5f), (int)isoY(0.4f, 0.5f, 45));
+    } else if (lvl == 4 && var == 3) { // дата-центр
+        u32 c = RGB(60, 64, 74);
+        Face f = sbox(0.10f, 0.10f, 0.90f, 0.72f, 0, 22, c);
+        for (int k = 0; k < 3; k++) { faceRect(f, 0, 2, f.wl - 2, 4 + k * 6, 5 + k * 6, RGB(60, 160, 255), RGB(80, 180, 255)); faceRect(f, 1, 2, f.wr - 2, 4 + k * 6, 5 + k * 6, RGB(50, 130, 220), RGB(80, 180, 255)); }
+        flatRoof(0.10f, 0.10f, 0.90f, 0.72f, 22, RGB(90, 92, 98));
+        for (int k = 0; k < 3; k++) {
+            float u = 0.25f + k * 0.22f;
+            sbox(u - 0.07f, 0.30f, u + 0.07f, 0.50f, 22, 5, RGB(170, 175, 180));
+            fillEllipse(isoX(u, 0.40f), isoY(u, 0.40f, 27), 4, 2, RGB(60, 60, 65));
+        }
+        fence(0.04f, 0.04f, 0.96f, 0.96f, RGB(180, 180, 185));
+        box(0.40f, 0.80f, 0.60f, 0.92f, 0, 8, RGB(240, 240, 240), RGB(230, 230, 230), RGB(200, 200, 200));
+    } else { // лаборатория
+        u32 c = RGB(236, 238, 242);
+        Face f = sbox(0.10f, 0.15f, 0.70f, 0.85f, 0, 26, c);
+        windows(f, 0, 0, 2, 12, 5, 6, 7, 2, RGB(90, 150, 200), r, 0.7f, LIT3);
+        windows(f, 1, 0, 2, 12, 5, 6, 7, 2, RGB(70, 130, 180), r, 0.7f, LIT3);
+        flatRoof(0.10f, 0.15f, 0.70f, 0.85f, 26, RGB(200, 202, 206));
+        float cx = isoX(0.40f, 0.50f), cy = isoY(0.40f, 0.50f, 26);
+        for (int y = 0; y < 14; y++) { float w = sqrtf(1.0f - (y / 14.0f) * (y / 14.0f)) * 14; prect((int)(cx - w), (int)cy - y, (int)(2 * w), 1, cshade(RGB(220, 224, 230), 1.0f - y * 0.01f)); }
+        prect((int)cx - 1, (int)cy - 13, 3, 6, RGB(60, 60, 70));
+        for (int k = 0; k < 2; k++) isoQuad(0.76f, 0.20f + k * 0.32f, 2, 0.94f, 0.20f + k * 0.32f, 2, 0.94f, 0.46f + k * 0.32f, 6, 0.76f, 0.46f + k * 0.32f, 6, RGB(40, 60, 120));
+    }
+}
+// --- новые постройки ---
+static void genServices2() {
+    Rng r(777);
+    // газовая электростанция
+    SP_BLD[B_GAS] = newSpr(128, 120, 64, 120, 2);
+    plotPave(RGB(150, 152, 150));
+    {
+        float sx1 = isoX(0.45f, 0.40f), sy1 = isoY(0.45f, 0.40f, 0);
+        cylinder(sx1, sy1, 5, 56, RGB(210, 212, 214), RGB(150, 150, 150)); addEmit(EM_STEAM, (int)sx1, (int)(sy1 - 56));
+        float sx2 = isoX(0.85f, 0.40f), sy2 = isoY(0.85f, 0.40f, 0);
+        cylinder(sx2, sy2, 5, 50, RGB(210, 212, 214), RGB(150, 150, 150)); addEmit(EM_STEAM, (int)sx2, (int)(sy2 - 50));
+        for (int k = 0; k < 2; k++) {
+            float x = isoX(1.55f, 0.40f + k * 0.62f), y = isoY(1.55f, 0.40f + k * 0.62f, 0);
+            prect((int)x - 6, (int)y - 10, 1, 10, RGB(120, 120, 125)); prect((int)x + 5, (int)y - 10, 1, 10, RGB(120, 120, 125));
+            fillEllipse(x, y - 17, 11, 11, RGB(170, 175, 182)); fillEllipse(x - 3, y - 20, 5, 5, RGB(225, 228, 232));
+        }
+        Face f = sbox(0.15f, 0.75f, 1.30f, 1.85f, 0, 28, RGB(120, 150, 180));
+        windows(f, 0, 6, 2, 10, 4, 5, 7, 4, RGB(200, 230, 250), r, 0.7f, LIT3);
+        windows(f, 1, 6, 2, 10, 4, 5, 7, 4, RGB(180, 210, 240), r, 0.7f, LIT3);
+        faceRect(f, 0, 8, 22, 0, 12, RGB(80, 90, 100));
+        flatRoof(0.15f, 0.75f, 1.30f, 1.85f, 28, RGB(110, 120, 130));
+        isoLine(1.30f, 1.0f, 1.55f, 1.0f, 6, RGB(230, 200, 60)); isoLine(1.30f, 1.3f, 1.55f, 1.02f, 7, RGB(230, 200, 60));
+    }
+    // поликлиника
+    SP_BLD[B_CLINIC] = newSpr(64, 72, 32, 72);
+    plotPave(RGB(190, 190, 186));
+    {
+        Face f = sbox(0.12f, 0.18f, 0.84f, 0.80f, 0, 26, RGB(240, 242, 246));
+        windows(f, 0, 0, 2, 12, 4, 6, 6, 3, RGB(110, 160, 210), r, 0.7f, LIT3);
+        faceRect(f, 1, 5, 17, 9, 12, RGB(220, 40, 40), RGB(255, 80, 80)); faceRect(f, 1, 9, 13, 5, 16, RGB(220, 40, 40), RGB(255, 80, 80));
+        faceRect(f, 0, f.wl / 2 - 3, f.wl / 2 + 3, 0, 9, RGB(130, 180, 220), LIT2);
+        flatRoof(0.12f, 0.18f, 0.84f, 0.80f, 26, RGB(200, 200, 205));
+    }
+    // библиотека
+    SP_BLD[B_LIBRARY] = newSpr(64, 72, 32, 72);
+    plotPave(RGB(196, 188, 170));
+    {
+        u32 c = RGB(214, 196, 160);
+        Face f = sbox(0.15f, 0.15f, 0.82f, 0.74f, 0, 22, c);
+        faceRect(f, 1, 3, f.wr - 3, 4, 16, RGB(90, 110, 130), LIT1);
+        for (int t = 2; t < f.wl; t += 5) faceRect(f, 0, t, t + 2, 0, 20, RGB(248, 246, 238));
+        faceRect(f, 0, 0, f.wl, 20, 22, RGB(240, 236, 226));
+        isoTri(0.15f, 0.74f, 22, 0.82f, 0.74f, 22, 0.485f, 0.74f, 30, RGB(236, 230, 214));
+        flatRoof(0.15f, 0.15f, 0.82f, 0.74f, 22, RGB(120, 90, 70));
+        box(0.12f, 0.74f, 0.85f, 0.88f, 0, 2, RGB(220, 216, 206), RGB(200, 196, 186), RGB(170, 166, 156));
+    }
+    // музей
+    SP_BLD[B_MUSEUM] = newSpr(128, 120, 64, 120, 2);
+    plotPave(RGB(200, 192, 176));
+    {
+        u32 c = RGB(232, 222, 198);
+        Face f = sbox(0.20f, 0.20f, 1.80f, 1.55f, 0, 32, c);
+        windows(f, 1, 6, 2, 12, 4, 7, 8, 4, RGB(90, 110, 140), r, 0.5f, LIT1);
+        for (int t = 3; t < f.wl - 2; t += 7) faceRect(f, 0, t, t + 3, 2, 28, RGB(250, 248, 242));
+        faceRect(f, 0, 0, f.wl, 28, 32, RGB(244, 238, 226)); faceRect(f, 0, 0, f.wl, 0, 2, RGB(200, 196, 186));
+        isoTri(0.20f, 1.55f, 32, 1.80f, 1.55f, 32, 1.0f, 1.55f, 46, RGB(240, 234, 220));
+        flatRoof(0.20f, 0.20f, 1.80f, 1.55f, 32, RGB(140, 120, 100));
+        float cx = isoX(1.0f, 0.85f), cy = isoY(1.0f, 0.85f, 32);
+        cylinder(cx, cy, 14, 8, RGB(230, 220, 196), RGB(210, 200, 176));
+        for (int y = 0; y < 14; y++) { float w = sqrtf(1.0f - (y / 14.0f) * (y / 14.0f)) * 14; prect((int)(cx - w), (int)cy - 8 - y, (int)(2 * w), 1, cshade(RGB(110, 160, 140), 1.1f - y * 0.02f)); }
+        box(0.4f, 1.55f, 1.6f, 1.85f, 0, 3, RGB(220, 214, 200), RGB(200, 194, 180), RGB(170, 164, 150));
+    }
+    // театр
+    SP_BLD[B_THEATER] = newSpr(128, 120, 64, 120, 2);
+    plotPave(RGB(196, 186, 176));
+    {
+        u32 c = RGB(186, 62, 56);
+        Face f = sbox(0.20f, 0.15f, 1.80f, 1.50f, 0, 36, c);
+        for (int t = 3; t < f.wl - 2; t += 8) faceRect(f, 0, t, t + 3, 2, 30, RGB(246, 238, 220));
+        faceRect(f, 0, 0, f.wl, 30, 36, RGB(220, 190, 110), RGB(255, 210, 120));
+        windows(f, 1, 8, 2, 12, 4, 7, 8, 4, RGB(250, 210, 140), r, 0.8f, LIT1);
+        flatRoof(0.20f, 0.15f, 1.80f, 1.50f, 36, RGB(110, 70, 60));
+        Face s = sbox(0.6f, 0.30f, 1.4f, 1.0f, 36, 16, cshade(c, 0.9f)); (void)s;
+        flatRoof(0.6f, 0.30f, 1.4f, 1.0f, 52, RGB(110, 70, 60));
+        signBoard(1.0f, 1.35f, 36, "ТЕАТР", RGB(40, 20, 20), RGB(255, 210, 90));
+        box(0.4f, 1.50f, 1.6f, 1.82f, 0, 3, RGB(200, 60, 55), RGB(180, 50, 45), RGB(150, 40, 35));
+    }
+    // детская площадка
+    SP_BLD[B_PLAYGROUND] = newSpr(64, 60, 32, 60);
+    {
+        isoQuad(0.10f, 0.10f, 0, 0.45f, 0.10f, 0, 0.45f, 0.45f, 0, 0.10f, 0.45f, 0, RGB(150, 110, 70));
+        isoQuad(0.13f, 0.13f, 0, 0.42f, 0.13f, 0, 0.42f, 0.42f, 0, 0.13f, 0.42f, 0, RGB(232, 210, 150));
+        float x = isoX(0.70f, 0.30f), y = isoY(0.70f, 0.30f, 0);
+        prect((int)x - 6, (int)y - 14, 1, 14, RGB(80, 80, 200)); prect((int)x + 6, (int)y - 14, 1, 14, RGB(80, 80, 200)); prect((int)x - 6, (int)y - 14, 13, 1, RGB(80, 80, 200));
+        prect((int)x - 3, (int)y - 13, 1, 9, RGB(60, 60, 60)); prect((int)x - 4, (int)y - 4, 3, 1, RGB(230, 60, 50));
+        prect((int)x + 3, (int)y - 13, 1, 7, RGB(60, 60, 60)); prect((int)x + 2, (int)y - 6, 3, 1, RGB(240, 200, 40));
+        float sx = isoX(0.35f, 0.75f), sy = isoY(0.35f, 0.75f, 0);
+        prect((int)sx, (int)sy - 12, 2, 12, RGB(240, 200, 40)); pline((int)sx + 1, (int)sy - 12, (int)sx + 12, (int)sy - 1, RGB(230, 60, 50)); pline((int)sx + 1, (int)sy - 11, (int)sx + 12, (int)sy, RGB(200, 40, 40));
+        float cx = isoX(0.75f, 0.75f), cy = isoY(0.75f, 0.75f, 0);
+        fillEllipse(cx, cy - 3, 7, 3.5f, RGB(60, 160, 90)); fillEllipse(cx, cy - 4, 6, 3, RGB(240, 200, 60)); prect((int)cx, (int)cy - 9, 1, 5, RGB(80, 80, 80));
+    }
+    // пляж
+    SP_BLD[B_BEACH] = newSpr(64, 60, 32, 60);
+    {
+        diamond(RGB(232, 214, 160)); noiseSpr(0.10f, 31);
+        const u32 uc[3] = {RGB(230, 70, 60), RGB(60, 140, 230), RGB(250, 210, 60)};
+        const float uu[3] = {0.25f, 0.70f, 0.45f}, uv[3] = {0.30f, 0.35f, 0.75f};
+        for (int k = 0; k < 3; k++) {
+            float x = isoX(uu[k], uv[k]), y = isoY(uu[k], uv[k], 0);
+            isoQuad(uu[k] + 0.06f, uv[k] - 0.04f, 0, uu[k] + 0.20f, uv[k] - 0.04f, 0, uu[k] + 0.20f, uv[k] + 0.04f, 0, uu[k] + 0.06f, uv[k] + 0.04f, 0, k & 1 ? RGB(250, 250, 245) : uc[(k + 1) % 3]);
+            umbrella(x, y, uc[k]);
+        }
+        float lx = isoX(0.85f, 0.85f), ly = isoY(0.85f, 0.85f, 0);
+        prect((int)lx - 3, (int)ly - 14, 1, 14, RGB(240, 240, 240)); prect((int)lx + 3, (int)ly - 14, 1, 14, RGB(240, 240, 240));
+        prect((int)lx - 4, (int)ly - 16, 9, 3, RGB(220, 50, 45));
+    }
+    // спортплощадка
+    SP_BLD[B_SPORTS] = newSpr(128, 80, 64, 80, 2);
+    {
+        diamond(RGB(150, 150, 146));
+        isoQuad(0.10f, 0.10f, 0, 1.90f, 0.10f, 0, 1.90f, 1.10f, 0, 0.10f, 1.10f, 0, RGB(70, 150, 70));
+        isoLine(0.15f, 0.15f, 1.85f, 0.15f, 0, RGB(240, 240, 240)); isoLine(0.15f, 1.05f, 1.85f, 1.05f, 0, RGB(240, 240, 240));
+        isoLine(0.15f, 0.15f, 0.15f, 1.05f, 0, RGB(240, 240, 240)); isoLine(1.85f, 0.15f, 1.85f, 1.05f, 0, RGB(240, 240, 240)); isoLine(1.0f, 0.15f, 1.0f, 1.05f, 0, RGB(240, 240, 240));
+        for (int k = 0; k < 2; k++) { float u = k ? 1.85f : 0.15f; isoLine(u, 0.45f, u, 0.75f, 6, RGB(250, 250, 250)); isoLine(u, 0.45f, u, 0.45f, 6, RGB(250, 250, 250)); float x = isoX(u, 0.45f), y = isoY(u, 0.45f, 0); prect((int)x, (int)y - 6, 1, 6, RGB(250, 250, 250)); x = isoX(u, 0.75f); y = isoY(u, 0.75f, 0); prect((int)x, (int)y - 6, 1, 6, RGB(250, 250, 250)); }
+        isoQuad(0.10f, 1.25f, 0, 1.90f, 1.25f, 0, 1.90f, 1.90f, 0, 0.10f, 1.90f, 0, RGB(190, 90, 60));
+        isoLine(1.0f, 1.25f, 1.0f, 1.90f, 0, RGB(240, 240, 240));
+        for (int k = 0; k < 2; k++) { float u = k ? 1.80f : 0.20f; float x = isoX(u, 1.575f), y = isoY(u, 1.575f, 0); prect((int)x, (int)y - 16, 1, 16, RGB(100, 100, 105)); prect((int)x - 3, (int)y - 19, 7, 4, RGB(250, 250, 250)); pset((int)x, (int)y - 15, RGB(240, 120, 40)); }
+        fence(0.05f, 0.05f, 1.95f, 1.95f, RGB(170, 175, 180));
+    }
+    // бассейн
+    SP_BLD[B_POOL] = newSpr(128, 80, 64, 80, 2);
+    plotPave(RGB(214, 214, 208));
+    {
+        isoQuad(0.15f, 0.15f, 0, 1.85f, 0.15f, 0, 1.85f, 1.15f, 0, 0.15f, 1.15f, 0, RGB(240, 240, 236));
+        isoQuad(0.22f, 0.22f, 0, 1.78f, 0.22f, 0, 1.78f, 1.08f, 0, 0.22f, 1.08f, 0, RGB(60, 160, 220));
+        for (float v = 0.40f; v < 1.0f; v += 0.17f) isoLine(0.25f, v, 1.75f, v, 0, RGB(240, 240, 120));
+        isoLine(0.3f, 0.3f, 1.2f, 0.3f, 0, RGB(170, 230, 250));
+        for (int k = 0; k < 4; k++) isoQuad(0.3f + k * 0.4f, 1.24f, 1, 0.48f + k * 0.4f, 1.24f, 1, 0.48f + k * 0.4f, 1.34f, 1, 0.3f + k * 0.4f, 1.34f, 1, RGB(250, 250, 250));
+        Face f = sbox(0.15f, 1.45f, 1.85f, 1.88f, 0, 14, RGB(150, 200, 230));
+        faceRect(f, 0, 2, f.wl - 2, 3, 10, RGB(200, 235, 250), LIT3);
+        flatRoof(0.15f, 1.45f, 1.85f, 1.88f, 14, RGB(120, 140, 160));
+    }
+    // колесо обозрения (колесо вращается отдельным спрайтом)
+    SP_BLD[B_WHEEL] = newSpr(128, 150, 64, 150, 2);
+    plotPave(RGB(200, 192, 176));
+    {
+        float hx = isoX(1.0f, 1.0f), hy = isoY(1.0f, 1.0f, 62);
+        for (int s = -1; s <= 1; s += 2) {
+            float bx = isoX(1.0f + s * 0.45f, 1.0f - s * 0.45f), by = isoY(1.0f + s * 0.45f, 1.0f - s * 0.45f, 0);
+            pline((int)bx, (int)by, (int)hx, (int)hy, RGB(230, 230, 236)); pline((int)bx + 1, (int)by, (int)hx + 1, (int)hy, RGB(170, 170, 180));
+        }
+        addEmit(EM_WHEEL, (int)hx, (int)hy);
+        Face k = sbox(1.45f, 1.45f, 1.85f, 1.85f, 0, 10, RGB(240, 200, 60)); faceRect(k, 0, 2, 9, 3, 8, RGB(120, 170, 210), LIT2);
+        box(1.40f, 1.40f, 1.90f, 1.90f, 10, 2, RGB(220, 60, 50), RGB(200, 50, 40), RGB(160, 40, 30));
+        fence(0.1f, 0.1f, 1.9f, 1.9f, RGB(200, 60, 55));
+    }
+    SP_WHEEL = newSpr(100, 100, 50, 50);
+    for (int k = 0; k < 360; k++) {
+        float a = k * 0.01745f;
+        pset((int)(50 + cosf(a) * 42), (int)(50 + sinf(a) * 42), RGB(240, 240, 245));
+        pset((int)(50 + cosf(a) * 41), (int)(50 + sinf(a) * 41), RGB(200, 200, 210));
+        pset((int)(50 + cosf(a) * 36), (int)(50 + sinf(a) * 36), RGB(220, 220, 228));
+    }
+    for (int s = 0; s < 12; s++) { float a = s * 0.5236f; pline(50, 50, (int)(50 + cosf(a) * 42), (int)(50 + sinf(a) * 42), RGB(210, 210, 220)); }
+    {
+        const u32 cab[4] = {RGB(230, 60, 55), RGB(60, 140, 230), RGB(250, 200, 50), RGB(80, 190, 100)};
+        for (int s = 0; s < 12; s++) {
+            float a = s * 0.5236f + 0.26f; int x = (int)(50 + cosf(a) * 43), y = (int)(50 + sinf(a) * 43);
+            prect(x - 3, y - 3, 6, 6, cab[s % 4]); prect(x - 2, y - 2, 4, 2, RGB(200, 230, 250));
+            lset(x - 2, y - 2, LIT2); lset(x + 1, y - 2, LIT2);
+        }
+        fillEllipse(50, 50, 4, 4, RGB(160, 160, 170));
+    }
+    // зоопарк
+    SP_BLD[B_ZOO] = newSpr(192, 110, 96, 110, 3);
+    {
+        isoQuad(1.35f, 0, 0, 1.65f, 0, 0, 1.65f, 3, 0, 1.35f, 3, 0, RGB(205, 190, 160));
+        isoQuad(0, 1.35f, 0, 3, 1.35f, 0, 3, 1.65f, 0, 0, 1.65f, 0, RGB(205, 190, 160));
+        // вольеры
+        fence(0.15f, 0.15f, 1.25f, 1.25f, RGB(140, 100, 60));
+        fence(1.75f, 0.15f, 2.85f, 1.25f, RGB(140, 100, 60));
+        fence(0.15f, 1.75f, 1.25f, 2.85f, RGB(140, 100, 60));
+        isoQuad(1.80f, 1.80f, 0, 2.80f, 1.80f, 0, 2.80f, 2.80f, 0, 1.80f, 2.80f, 0, RGB(196, 176, 120));
+        fillEllipse(isoX(0.75f, 2.35f), isoY(0.75f, 2.35f, 0), 18, 8, RGB(70, 140, 200)); fillEllipse(isoX(0.70f, 2.30f) - 4, isoY(0.70f, 2.30f, 0) - 2, 5, 1.5f, RGB(170, 220, 250));
+        // слон
+        { float x = isoX(0.70f, 0.70f), y = isoY(0.70f, 0.70f, 0); fillEllipse(x, y - 7, 8, 5, RGB(140, 140, 150)); fillEllipse(x + 7, y - 9, 4, 4, RGB(150, 150, 160)); prect((int)x + 10, (int)y - 8, 1, 6, RGB(130, 130, 140)); for (int k = 0; k < 4; k++) prect((int)x - 6 + k * 4, (int)y - 3, 2, 3, RGB(120, 120, 130)); }
+        // жираф
+        { float x = isoX(2.30f, 0.70f), y = isoY(2.30f, 0.70f, 0); fillEllipse(x, y - 9, 6, 3.5f, RGB(230, 190, 80)); pline((int)x + 4, (int)y - 10, (int)x + 8, (int)y - 22, RGB(230, 190, 80)); pline((int)x + 5, (int)y - 10, (int)x + 9, (int)y - 22, RGB(230, 190, 80)); fillEllipse(x + 9, y - 23, 2.5f, 1.8f, RGB(230, 190, 80));
+          for (int k = 0; k < 4; k++) prect((int)x - 5 + k * 3, (int)y - 6, 1, 6, RGB(200, 160, 70)); pset((int)x - 2, (int)y - 10, RGB(150, 100, 40)); pset((int)x + 2, (int)y - 9, RGB(150, 100, 40)); }
+        // львы/медведь
+        { float x = isoX(2.30f, 2.30f), y = isoY(2.30f, 2.30f, 0); fillEllipse(x, y - 5, 6, 3.5f, RGB(200, 140, 60)); fillEllipse(x + 5, y - 7, 3.5f, 3.5f, RGB(160, 100, 40)); }
+        { float x = isoX(0.70f, 2.60f), y = isoY(0.70f, 2.60f, 0); fillEllipse(x + 14, y - 5, 5, 3, RGB(110, 80, 50)); }
+        const float tu[6] = {0.3f, 1.1f, 1.9f, 2.7f, 2.0f, 2.6f}, tv[6] = {1.1f, 0.3f, 1.1f, 0.3f, 1.95f, 2.0f};
+        for (int k = 0; k < 6; k++) treeAt(isoX(tu[k], tv[k]), isoY(tu[k], tv[k], 0), k % 3 == 2 ? 2 : k & 1, 1, 1.0f);
+        // ворота
+        float gx = isoX(2.95f, 1.5f), gy = isoY(2.95f, 1.5f, 0);
+        prect((int)gx - 12, (int)gy - 20, 3, 20, RGB(120, 80, 50)); prect((int)gx + 10, (int)gy - 20, 3, 20, RGB(120, 80, 50));
+        prect((int)gx - 14, (int)gy - 28, 29, 9, RGB(60, 120, 60)); sprText((int)gx - 11, (int)gy - 27, "ЗОО", RGB(255, 240, 160), RGB(255, 230, 150));
+    }
+    // памятник
+    SP_BLD[B_MONUMENT] = newSpr(64, 90, 32, 90);
+    plotPave(RGB(200, 196, 188));
+    {
+        box(0.25f, 0.25f, 0.75f, 0.75f, 0, 4, RGB(150, 150, 150), RGB(130, 130, 130), RGB(100, 100, 100));
+        box(0.35f, 0.35f, 0.65f, 0.65f, 4, 6, RGB(170, 168, 160), RGB(150, 148, 140), RGB(120, 118, 110));
+        Face s = box(0.44f, 0.44f, 0.56f, 0.56f, 10, 44, RGB(230, 226, 214), RGB(214, 210, 198), RGB(170, 166, 156)); (void)s;
+        float x = isoX(0.5f, 0.5f), y = isoY(0.5f, 0.5f, 54);
+        isoTri(0.44f, 0.56f, 54, 0.56f, 0.56f, 54, 0.5f, 0.5f, 62, RGB(214, 210, 198));
+        isoTri(0.56f, 0.44f, 54, 0.56f, 0.56f, 54, 0.5f, 0.5f, 62, RGB(170, 166, 156));
+        pset((int)x, (int)y - 10, RGB(250, 210, 60)); pset((int)x - 1, (int)y - 9, RGB(250, 210, 60)); pset((int)x + 1, (int)y - 9, RGB(250, 210, 60)); pset((int)x, (int)y - 8, RGB(250, 210, 60));
+        lset((int)x, (int)y - 9, RGB(255, 220, 120));
+        for (int k = 0; k < 10; k++) { float a = k * 0.63f; pset((int)(isoX(0.5f, 0.5f) + cosf(a) * 13), (int)(isoY(0.5f, 0.5f, 0) + sinf(a) * 6), k & 1 ? RGB(230, 50, 60) : RGB(250, 200, 50)); }
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -1537,7 +2154,7 @@ static inline int roadMask(int x, int y) {
     }
     return m;
 }
-static bool isPowerProducer(int bt) { return bt == B_WIND || bt == B_SOLAR || bt == B_COAL || bt == B_NUCLEAR; }
+static bool isPowerProducer(int bt) { return bt == B_WIND || bt == B_SOLAR || bt == B_COAL || bt == B_NUCLEAR || bt == B_GAS; }
 // проводят ток: ЛЭП, зоны, здания и дороги (кабель вдоль дорог)
 static bool isConductor(const Tile& t) { return (t.flags & F_PLINE) || t.zone || t.road || (t.bt != B_NONE && t.bt != B_RUBBLE); }
 static int tileOriginIdx(int x, int y) { const Tile& t = TL(x, y); return (y + t.oy) * MAPN + (x + t.ox); }
@@ -1758,7 +2375,7 @@ static void stageAccessTraffic() {
     for (int i = 0; i < NT; i++) {
         const Tile& t = map_[i];
         if (t.bt == B_GROW && !(t.flags & F_ABAND) && nearRoad[i] >= 0) tmpf[nearRoad[i]] += t.pop * 0.45f;
-        if (t.bt >= B_POLICE && isOrigin(t) && nearRoad[i] >= 0) tmpf[nearRoad[i]] += t.bt == B_STADIUM ? 120 : 20;
+        if (t.bt >= B_POLICE && isOrigin(t) && nearRoad[i] >= 0) tmpf[nearRoad[i]] += t.bt == B_STADIUM ? 120 : (t.bt == B_ZOO || t.bt == B_WHEEL || t.bt == B_THEATER) ? 60 : 20;
     }
     for (int it = 0; it < 8; it++) {
         for (size_t k = 0; k < roadList.size(); k++) {
@@ -1774,6 +2391,8 @@ static void stageAccessTraffic() {
         traffic[i] = map_[i].road ? (u8)clampi((int)(tmpf[i] / ROAD_CAP[map_[i].road] * 140.0f), 0, 255) : 0;
     }
 }
+// ёмкость застройки по типам (жители / рабочие места), пересчитывается при переписи
+static float capT[3] = {0, 0, 0};
 static int carsTarget = 0;
 static void checkAchievements();
 static void stageCensus() {
@@ -1791,6 +2410,8 @@ static void stageCensus() {
         } else if (zt == 1) jc += t.pop; else ji += t.pop;
     }
     city.pop = pop; city.jobsC = jc; city.jobsI = ji;
+    capT[0] = capT[1] = capT[2] = 0;
+    for (int i = 0; i < NT; i++) { const Tile& t = map_[i]; if (t.bt == B_GROW && !(t.flags & F_ABAND)) { int k = zoneType(t); if (k >= 0 && k < 3) capT[k] += GROW_CAP[k][t.level]; } }
     float hp = happyN ? (float)happySum / happyN : 60;
     if (city.waterUse < city.waterNeed * 0.8f && city.pop > 300) hp -= 8;
     if (city.sewageCap < city.waterUse && city.pop > 2000) hp -= 6;
@@ -1836,12 +2457,36 @@ static void startFire(int i) {
     Tile& t = map_[i]; if (t.flags & F_FIRE) return;
     t.flags |= F_FIRE; t.fireT = 0;
 }
+// выбор типа здания для свободной зоны: баланс жителей и рабочих мест + место + соседи
+static int chooseFreeType(int i) {
+    int x = i % MAPN, y = i / MAPN;
+    float fC = capT[1] / (0.22f * capT[0] + 10), fI = capT[2] / (0.30f * capT[0] + 15);
+    float s[3];
+    s[0] = 0.5f * (fC + fI) - 0.7f; s[1] = 1.0f - fC; s[2] = 1.0f - fI;
+    for (int k = 0; k < 3; k++) s[k] += city.demand[k] * 0.3f + (grng.f() - 0.5f) * 0.2f;
+    float lv = landv[i] / 255.0f, po = pollution[i] / 255.0f, tr = (nearRoad[i] >= 0 ? traffic[nearRoad[i]] : 0) / 255.0f;
+    s[0] += lv * 0.6f - po * 1.0f;
+    s[1] += tr * 0.6f + lv * 0.25f - 0.05f;
+    s[2] += po * 0.6f - lv * 0.35f;
+    for (int dy = -2; dy <= 2; dy++) for (int dx = -2; dx <= 2; dx++) {
+        if (!inMap(x + dx, y + dy) || (!dx && !dy)) continue;
+        const Tile& n = TL(x + dx, y + dy);
+        if (n.bt == B_GROW && !(n.flags & F_ABAND)) { int k = zoneType(n); if (k >= 0 && k < 3) s[k] += 0.07f; if (k == 2) s[0] -= 0.06f; }
+    }
+    int best = 0; for (int k = 1; k < 3; k++) if (s[k] > s[best]) best = k;
+    return city.demand[best] > -0.4f ? best : -1;
+}
 static void growTile(int i) {
     Tile& t = map_[i];
     int zt = zoneType(t);
     if (t.flags & F_FIRE) return;
-    if (t.bt == B_RUBBLE) { if (grng.f() < 0.08f) { t.bt = B_NONE; t.level = 0; } return; }
+    if (t.bt == B_RUBBLE) { if (grng.f() < 0.08f) { t.bt = B_NONE; t.level = 0; t.var &= 15; } return; }
     if (zt < 0) return;
+    if (zt == 3) { // свободная зона: жители выбирают, что строить
+        if (t.bt != B_NONE) return;
+        zt = chooseFreeType(i);
+        if (zt < 0) return;
+    }
     if (t.bt != B_NONE && t.bt != B_GROW) return;
     if (t.build) { t.build--; if (!t.build) { t.pop = (u16)(GROW_CAP[zt][t.level] * (0.7f + 0.3f * grng.f())); } return; }
     bool road = access_[i], power = (t.flags & F_POWER) != 0, water = (t.flags & F_WATER) != 0;
@@ -1857,8 +2502,9 @@ static void growTile(int i) {
     int target = 1 + (int)((des - 20) / 22.0f); target = clampi(target, 1, lvlCap);
     bool ok = road && power;
     if (t.bt == B_NONE) {
-        if (ok && dem > -0.05f && grng.f() < 0.10f + dem * 0.4f) {
-            t.bt = B_GROW; t.level = 1; t.var = (u8)grng.i(3); t.build = 3; t.bad = 0; t.flags &= ~F_ABAND; t.tree = 0;
+        if (ok && dem > (t.zone >= Z_FREE ? -0.4f : -0.05f) && grng.f() < 0.10f + std::max(0.0f, dem) * 0.4f) {
+            t.bt = B_GROW; t.level = 1; t.var = (u8)((t.var & 0x30) | grng.i(NVAR)); t.build = 3;
+            if (t.zone >= Z_FREE) { t.var = (u8)((t.var & 15) | ((zt + 1) << 4)); capT[zt] += GROW_CAP[zt][1]; } t.bad = 0; t.flags &= ~F_ABAND; t.tree = 0;
             t.pop = 0;
         }
         return;
@@ -1874,7 +2520,7 @@ static void growTile(int i) {
     if (t.bad > 60) { t.flags |= F_ABAND; t.pop = 0; return; }
     // рост уровня
     if (!bad && t.level < target && dem > 0.05f && grng.f() < 0.05f + dem * 0.15f) {
-        t.level++; t.var = (u8)grng.i(3); t.build = (u8)(2 + t.level); t.pop = (u16)(t.pop / 2);
+        t.level++; t.var = (u8)((t.var & 0x30) | grng.i(NVAR)); t.build = (u8)(2 + t.level); t.pop = (u16)(t.pop / 2);
         return;
     }
     // заполнение / убывание жителей
@@ -1933,7 +2579,7 @@ static void monthlyBudget() {
             inc[zt] += (int)(t.pop * city.tax[zt] * k * (0.6f + landv[i] / 255.0f));
         }
         if (t.bt > B_RUBBLE && t.bt != B_GROW && isOrigin(t)) {
-            if (t.bt <= B_SEWAGE) util += BD[t.bt].upkeep; else serv += BD[t.bt].upkeep;
+            if (t.bt <= B_SEWAGE || t.bt == B_GAS) util += BD[t.bt].upkeep; else serv += BD[t.bt].upkeep;
         }
     }
     int roadE = roadCount[1] / 10 + roadCount[2] / 4 + roadCount[3] / 2;
@@ -2170,7 +2816,8 @@ static float tileWY(int x, int y, int h) { return (x + y + 2) * 16.0f - h * 8.0f
 static int growSprite(const Tile& t) {
     int zt = zoneType(t); if (zt < 0) zt = 0;
     if (t.build) return SP_CONSTR[t.level <= 2 ? 0 : t.level <= 3 ? 1 : 2];
-    return SP_GROW[zt][clampi(t.level, 1, 5)][t.var % 3];
+    if (zt > 2) zt = 0;
+    return SP_GROW[zt][clampi(t.level, 1, 5)][growVar(t)];
 }
 static void layerColor(int i, u8& r, u8& g, u8& b, u8& a) {
     const Tile& t = map_[i]; a = 0; int v = 0;
@@ -2250,7 +2897,7 @@ static void renderWorld() {
                 int f = ((int)(wfr + (hash2(x, y) & 3))) & 3;
                 sp = SP_WATER[f];
             } else if (t.ter == T_SAND) sp = SP_SAND[ss];
-            else sp = SP_GRASS[ss][t.var % 3];
+            else sp = SP_GRASS[ss][(t.var & 15) % 3];
             drawSprW(sp, wx, wy, ambR, ambG, ambB);
             if (t.road && t.ter != T_WATER) drawSprW(SP_ROAD[t.road][roadMask(x, y)], wx, wy, ambR, ambG, ambB);
             if (t.zone && t.bt == B_NONE) drawSprW(SP_ZONE[t.zone], wx, wy, ambR, ambG, ambB);
@@ -2372,6 +3019,16 @@ static void renderWorld() {
                                 SDL_RenderCopyEx(ren, p.tm, &src, &dst, ang, nullptr, SDL_FLIP_NONE);
                                 break;
                             }
+                            case EM_WHEEL: {
+                                const Spr& r = S[SP_WHEEL]; Page& p = pages[r.pg];
+                                float sx, sy; w2s(ex - r.ax, ey - r.ay, sx, sy);
+                                SDL_Rect src = {r.x, r.y, r.w, r.h}; SDL_Rect dst = {(int)sx, (int)sy, (int)(r.w * zoom), (int)(r.h * zoom)};
+                                SDL_SetTextureColorMod(p.tm, ambR, ambG, ambB); SDL_SetTextureAlphaMod(p.tm, oa);
+                                double ang = pw && speed ? fmod(gtime * 12.0, 360.0) : 0.0;
+                                SDL_RenderCopyEx(ren, p.tm, &src, &dst, ang, nullptr, SDL_FLIP_NONE);
+                                if (nightK > 0.05f && p.tl) { SDL_SetTextureAlphaMod(p.tl, (u8)(nightK * 255)); SDL_RenderCopyEx(ren, p.tl, &src, &dst, ang, nullptr, SDL_FLIP_NONE); }
+                                break;
+                            }
                             case EM_FLAG: {
                                 float sx, sy; w2s(ex, ey, sx, sy);
                                 for (int k = 0; k < 8; k++) {
@@ -2446,14 +3103,18 @@ static std::vector<Category> cats;
 static void initTools() {
     cats.clear();
     cats.push_back(Category{"ДОРОГИ", IC_ROAD, {{TK_ROAD, R_DIRT, "ГРУНТОВКА"}, {TK_ROAD, R_ROAD, "ДОРОГА"}, {TK_ROAD, R_AVE, "ПРОСПЕКТ"}}});
-    cats.push_back(Category{"ЗОНЫ", IC_ZONE, {{TK_ZONE, 1, "ЖИЛАЯ НИЗК."}, {TK_ZONE, 2, "ЖИЛАЯ СРЕД."}, {TK_ZONE, 3, "ЖИЛАЯ ВЫС."},
+    cats.push_back(Category{"ЗОНЫ", IC_ZONE, {{TK_ZONE, 10, "СВОБ. НИЗК."}, {TK_ZONE, 11, "СВОБ. СРЕД."}, {TK_ZONE, 12, "СВОБ. ВЫС."},
+                                                {TK_ZONE, 1, "ЖИЛАЯ НИЗК."}, {TK_ZONE, 2, "ЖИЛАЯ СРЕД."}, {TK_ZONE, 3, "ЖИЛАЯ ВЫС."},
                                                 {TK_ZONE, 4, "ТОРГ. НИЗК."}, {TK_ZONE, 5, "ТОРГ. СРЕД."}, {TK_ZONE, 6, "ТОРГ. ВЫС."},
                                                 {TK_ZONE, 7, "ПРОМ. НИЗК."}, {TK_ZONE, 8, "ПРОМ. СРЕД."}, {TK_ZONE, 9, "ПРОМ. ВЫС."}, {TK_DEZONE, 0, "СНЯТЬ ЗОНУ"}}});
-    cats.push_back(Category{"ЭНЕРГИЯ", IC_POWER, {{TK_PLINE, 0, "ЛЭП"}, {TK_BLD, B_WIND, "ВЕТРЯК"}, {TK_BLD, B_SOLAR, "СОЛНЕЧНАЯ"}, {TK_BLD, B_COAL, "УГОЛЬНАЯ"}, {TK_BLD, B_NUCLEAR, "АЭС"}}});
+    cats.push_back(Category{"ЭНЕРГИЯ", IC_POWER, {{TK_PLINE, 0, "ЛЭП"}, {TK_BLD, B_WIND, "ВЕТРЯК"}, {TK_BLD, B_SOLAR, "СОЛНЕЧНАЯ"}, {TK_BLD, B_GAS, "ГАЗОВАЯ"}, {TK_BLD, B_COAL, "УГОЛЬНАЯ"}, {TK_BLD, B_NUCLEAR, "АЭС"}}});
     cats.push_back(Category{"ВОДА", IC_WATER, {{TK_PIPE, 0, "ТРУБЫ"}, {TK_BLD, B_PUMP, "ВОДОКАЧКА"}, {TK_BLD, B_WTOWER, "ВОДОБАШНЯ"}, {TK_BLD, B_SEWAGE, "ОЧИСТНЫЕ"}}});
-    cats.push_back(Category{"СЛУЖБЫ", IC_SERVICE, {{TK_BLD, B_POLICE, "ПОЛИЦИЯ"}, {TK_BLD, B_FIRE, "ПОЖАРНАЯ"}, {TK_BLD, B_HOSPITAL, "БОЛЬНИЦА"},
-                                                     {TK_BLD, B_SCHOOL, "ШКОЛА"}, {TK_BLD, B_UNIV, "УНИВЕРСИТЕТ"}, {TK_BLD, B_CITYHALL, "МЭРИЯ"}, {TK_BLD, B_TVTOWER, "ТЕЛЕБАШНЯ"}}});
-    cats.push_back(Category{"ОТДЫХ", IC_SMILE, {{TK_BLD, B_PARKS, "СКВЕР"}, {TK_BLD, B_PARKL, "ПАРК"}, {TK_BLD, B_FOUNTAIN, "ФОНТАН"}, {TK_BLD, B_STADIUM, "СТАДИОН"}}});
+    cats.push_back(Category{"СЛУЖБЫ", IC_SERVICE, {{TK_BLD, B_POLICE, "ПОЛИЦИЯ"}, {TK_BLD, B_FIRE, "ПОЖАРНАЯ"}, {TK_BLD, B_CLINIC, "ПОЛИКЛИНИКА"}, {TK_BLD, B_HOSPITAL, "БОЛЬНИЦА"},
+                                                     {TK_BLD, B_LIBRARY, "БИБЛИОТЕКА"}, {TK_BLD, B_SCHOOL, "ШКОЛА"}, {TK_BLD, B_UNIV, "УНИВЕРСИТЕТ"}, {TK_BLD, B_CITYHALL, "МЭРИЯ"}}});
+    cats.push_back(Category{"ОТДЫХ", IC_SMILE, {{TK_BLD, B_PARKS, "СКВЕР"}, {TK_BLD, B_PLAYGROUND, "ПЛОЩАДКА"}, {TK_BLD, B_PARKL, "ПАРК"}, {TK_BLD, B_FOUNTAIN, "ФОНТАН"},
+                                                  {TK_BLD, B_BEACH, "ПЛЯЖ"}, {TK_BLD, B_SPORTS, "СПОРТПЛОЩАДКА"}, {TK_BLD, B_POOL, "БАССЕЙН"}, {TK_BLD, B_STADIUM, "СТАДИОН"}}});
+    cats.push_back(Category{"КУЛЬТУРА", IC_CULT, {{TK_BLD, B_MONUMENT, "ПАМЯТНИК"}, {TK_BLD, B_MUSEUM, "МУЗЕЙ"}, {TK_BLD, B_THEATER, "ТЕАТР"},
+                                                   {TK_BLD, B_WHEEL, "КОЛЕСО ОБОЗРЕНИЯ"}, {TK_BLD, B_ZOO, "ЗООПАРК"}, {TK_BLD, B_TVTOWER, "ТЕЛЕБАШНЯ"}}});
     cats.push_back(Category{"ЗЕМЛЯ", IC_FLAT, {{TK_TREE, 0, "ДЕРЕВЬЯ"}, {TK_FLAT, 0, "ВЫРОВНЯТЬ"}, {TK_RAISE, 0, "ПОДНЯТЬ"}, {TK_LOWER, 0, "ОПУСТИТЬ"}}});
 }
 static ToolDef curTool = {TK_INSPECT, 0, "ОСМОТР"};
@@ -2479,7 +3140,7 @@ static void clearBuildingAt(int x, int y) {
         }
     } else {
         touchTile(y * MAPN + x);
-        t.bt = B_NONE; t.level = 0; t.pop = 0; t.build = 0; t.bad = 0; t.flags &= ~(F_ABAND | F_FIRE);
+        t.bt = B_NONE; t.level = 0; t.pop = 0; t.build = 0; t.bad = 0; t.flags &= ~(F_ABAND | F_FIRE); t.var &= 15;
     }
 }
 static bool toolIsLine() { return curTool.kind == TK_ROAD || curTool.kind == TK_PLINE || curTool.kind == TK_PIPE; }
@@ -2536,9 +3197,9 @@ static int evalTiles(bool apply) {
             case TK_ZONE: {
                 if (t.ter == T_WATER || t.road || svc) break;
                 if (t.zone == curTool.arg) { ok = true; break; }
-                if (t.bt == B_GROW && zoneType(t) != (curTool.arg - 1) / 3) break;
+                if (t.bt == B_GROW && zoneFamily(t.zone) != zoneFamily(curTool.arg)) break;
                 ok = true; c = toolBaseCost(curTool);
-                if (apply) { touchTile(i); t.zone = (u8)curTool.arg; }
+                if (apply) { touchTile(i); t.zone = (u8)curTool.arg; if (t.bt != B_GROW) t.var &= 15; }
                 break;
             }
             case TK_DEZONE: {
@@ -2621,7 +3282,7 @@ static bool evalBuilding(int cx, int cy, bool apply, int& cost) {
         if (t.tree) cost += 2;
         pv.tiles.push_back(y * MAPN + x); pv.ok.push_back(g);
     }
-    if (bt == B_PUMP && ok && !nearWater(ox, oy, n)) ok = false;
+    if ((bt == B_PUMP || bt == B_BEACH) && ok && !nearWater(ox, oy, n)) ok = false;
     pv.bok = ok;
     if (ok && apply) {
         for (int j = 0; j < n; j++) for (int i = 0; i < n; i++) {
@@ -2648,7 +3309,7 @@ static void applyTool() {
     if (curTool.kind == TK_BLD) {
         int cost; bool ok = evalBuilding(dragEX, dragEY, false, cost);
         if (toolLocked(curTool)) { notify(std::string("НУЖЕН СТАТУС: ") + TIER_NAME[BD[curTool.arg].tier], RGB(255, 150, 90)); playSound(SND_ERR); return; }
-        if (!ok) { notify(curTool.arg == B_PUMP ? "ВОДОКАЧКУ НАДО СТАВИТЬ У ВОДЫ" : "ЗДЕСЬ СТРОИТЬ НЕЛЬЗЯ", RGB(255, 150, 90)); playSound(SND_ERR); return; }
+        if (!ok) { notify(curTool.arg == B_PUMP ? "ВОДОКАЧКУ НАДО СТАВИТЬ У ВОДЫ" : curTool.arg == B_BEACH ? "ПЛЯЖ НАДО СТАВИТЬ У ВОДЫ" : "ЗДЕСЬ СТРОИТЬ НЕЛЬЗЯ", RGB(255, 150, 90)); playSound(SND_ERR); return; }
         if (!canAfford(cost)) { notify("НЕДОСТАТОЧНО ДЕНЕГ", RGB(255, 150, 90)); playSound(SND_ERR); return; }
         beginUndo(); evalBuilding(dragEX, dragEY, true, cost); endUndo(cost);
         if (!city.sandbox) city.money -= cost;
@@ -2883,7 +3544,7 @@ static void demandBar(int x, int y, int w, int h, float d, u32 c) {
 static void toolPreview(const ToolDef& td, int x, int y, int w, int h) {
     int sp = -1;
     switch (td.kind) {
-        case TK_ROAD: sp = SP_ROAD[td.arg][3]; break; case TK_ZONE: sp = SP_GROW[(td.arg - 1) / 3][((td.arg - 1) % 3) * 2 + 1][0]; break;
+        case TK_ROAD: sp = SP_ROAD[td.arg][3]; break; case TK_ZONE: sp = td.arg >= Z_FREE ? (td.arg == 10 ? SP_GROW[0][1][3] : td.arg == 11 ? SP_GROW[1][2][3] : SP_GROW[0][5][3]) : SP_GROW[(td.arg - 1) / 3][((td.arg - 1) % 3) * 2 + 1][0]; break;
         case TK_BLD: sp = SP_BLD[td.arg]; break; case TK_PLINE: sp = SP_PLINE[3]; break; case TK_PIPE: sp = SP_PIPE[3]; break;
         case TK_TREE: sp = SP_TREE[0][season()]; break;
         default: break;
@@ -2948,7 +3609,7 @@ static void drawTopBar() {
 static int bottomH() { return 24 * U; }
 static void drawBottomBar() {
     int bh = bottomH(), y = SH - bh - padB;
-    const int NB = 12;
+    const int NB = 5 + (int)cats.size(); const int LI = 2 + (int)cats.size();
     int avail = SW - padL - padR;
     int bw = std::min(30 * U, avail / NB - U);
     int total = NB * (bw + U) - U, x = padL + (avail - total) / 2;
@@ -2968,9 +3629,9 @@ static void drawBottomBar() {
         for (size_t k = 0; k < cats[c].tools.size(); k++) if (cats[c].tools[k].kind == curTool.kind && cats[c].tools[k].arg == curTool.arg && curTool.kind != TK_INSPECT) act = true;
         cell(2 + c, BT_CAT, c, cats[c].icon, cats[c].name, act);
     }
-    cell(9, BT_LAYERS, 0, IC_LAYERS, "СЛОИ", layersOpen || layer);
-    cell(10, BT_UNDO, 0, IC_UNDO, "ОТМЕНА", false);
-    cell(11, BT_BUDGET, 0, IC_COIN, "БЮДЖЕТ", panelOpen == P_BUDGET);
+    cell(LI, BT_LAYERS, 0, IC_LAYERS, "СЛОИ", layersOpen || layer);
+    cell(LI + 1, BT_UNDO, 0, IC_UNDO, "ОТМЕНА", false);
+    cell(LI + 2, BT_BUDGET, 0, IC_COIN, "БЮДЖЕТ", panelOpen == P_BUDGET);
     // подменю категории
     if (openCat >= 0) {
         const Category& c = cats[openCat];
@@ -2999,7 +3660,7 @@ static void drawBottomBar() {
     }
     if (layersOpen) {
         int n = 10, lw = 70 * U, lh = 11 * U;
-        int lx = x + 9 * (bw + U) + bw / 2 - lw / 2; lx = std::min(lx, SW - padR - lw); int ly = y - 2 * U - n * (lh + U);
+        int lx = x + LI * (bw + U) + bw / 2 - lw / 2; lx = std::min(lx, SW - padR - lw); int ly = y - 2 * U - n * (lh + U);
         for (int k = 0; k < n; k++) {
             int yy = ly + k * (lh + U);
             button(lx, yy, lw, lh, BT_LAYER, k, layer == k);
@@ -3008,21 +3669,29 @@ static void drawBottomBar() {
     }
 }
 static void infoLine(int x, int& y, int w, const std::string& a, const std::string& b, u32 cb = RGB(255, 255, 255)) {
-    drawText(x, y, a, SU, RGB(170, 185, 210)); drawText(x + w, y, b, SU, cb, 2); y += 9 * SU;
+    drawText(x, y, a, SU, RGB(170, 185, 210));
+    int sc = fitScale(b, SU, w - textW(a, SU) - 3 * SU);
+    drawText(x + w, y + (7 * SU - 7 * sc) / 2, b, sc, cb, 2); y += 9 * SU;
 }
 static std::string pct(int v) { return strf("%d%%", v * 100 / 255); }
+static const char* growName(const Tile& t) {
+    int zt = zoneType(t); if (zt < 0 || zt > 2) zt = 0;
+    int v = growVar(t), l = clampi(t.level, 1, 5);
+    if (v >= 3 && SPECIAL_NAME[zt][l][v - 3]) return SPECIAL_NAME[zt][l][v - 3];
+    return GROW_NAME[zt][l];
+}
 static void drawInfo() {
     if (infoTile < 0) return;
     int x0 = infoTile % MAPN, y0 = infoTile / MAPN; const Tile& t = map_[infoTile];
     int i = infoTile;
     int ow = 110 * U, ox = SW - padR - ow, oy = padT + 17 * U;
-    int lines = 11; int oh = (lines + 2) * 9 * SU + 16 * U;
+    int lines = 12; int oh = (lines + 2) * 9 * SU + 16 * U;
     oh = std::min(oh, SH - oy - bottomH() - padB - 6 * U);
     panel(ox, oy, ow, oh);
     button(ox + ow - 12 * U, oy + 2 * U, 10 * U, 10 * U, BT_CLOSE, 0); iconAt(IC_CLOSE, ox + ow - 11 * U, oy + 3 * U, 8 * U);
     std::string title; u32 tc = RGB(255, 235, 150);
     int x = ox + 4 * U, y = oy + 4 * U, w = ow - 8 * U;
-    if (t.bt == B_GROW) title = GROW_NAME[zoneType(t)][t.level];
+    if (t.bt == B_GROW) title = growName(t);
     else if (t.bt > B_RUBBLE) title = BD[t.bt].name;
     else if (t.bt == B_RUBBLE) title = "РУИНЫ";
     else if (t.road) title = t.ter == T_WATER ? std::string("МОСТ") : ROAD_NAME[t.road];
@@ -3033,7 +3702,8 @@ static void drawInfo() {
     if (t.flags & F_FIRE) { drawText(x, y, "ГОРИТ!", SU, RGB(255, 120, 80)); y += 9 * SU; }
     if (t.bt == B_GROW) {
         int zt = zoneType(t);
-        infoLine(x, y, w, "ЗОНА", std::string(ZT_NAME[zt]) + ", " + DN_NAME[zoneDen(t)]);
+        if (t.zone >= Z_FREE) { infoLine(x, y, w, "ЗОНА", std::string("СВОБОДНАЯ, ") + DN_NAME[zoneDen(t)]); infoLine(x, y, w, "ЖИТЕЛИ ВЫБРАЛИ", ZT_NAME[zt], RGB(220, 170, 255)); }
+        else infoLine(x, y, w, "ЗОНА", std::string(ZT_NAME[zt]) + ", " + DN_NAME[zoneDen(t)]);
         infoLine(x, y, w, "УРОВЕНЬ", strf("%d", t.level));
         if (t.build) infoLine(x, y, w, "СОСТОЯНИЕ", "СТРОИТСЯ", RGB(255, 220, 120));
         else if (t.flags & F_ABAND) infoLine(x, y, w, "СОСТОЯНИЕ", "ЗАБРОШЕНО", RGB(255, 120, 100));
@@ -3384,7 +4054,7 @@ static void updateHint() {
     switch (curTool.kind) {
         case TK_INSPECT: hint = ""; break;
         case TK_ROAD: hint = std::string(ROAD_NAME[curTool.arg]) + ": ПРОВЕДИТЕ ПАЛЬЦЕМ. ДВА ПАЛЬЦА — КАРТА"; break;
-        case TK_ZONE: hint = std::string(ZT_NAME[(curTool.arg - 1) / 3]) + " ЗОНА: ВЫДЕЛИТЕ ПРЯМОУГОЛЬНИК"; break;
+        case TK_ZONE: hint = curTool.arg >= Z_FREE ? std::string("СВОБОДНАЯ ЗОНА: ЖИТЕЛИ САМИ РЕШАТ, ЧТО СТРОИТЬ") : std::string(ZT_NAME[(curTool.arg - 1) / 3]) + " ЗОНА: ВЫДЕЛИТЕ ПРЯМОУГОЛЬНИК"; break;
         case TK_BLD: hint = std::string(BD[curTool.arg].name) + ": КОСНИТЕСЬ МЕСТА И ОТПУСТИТЕ"; break;
         case TK_BULL: hint = layer == 2 ? "СНОС ТРУБ: ВЫДЕЛИТЕ ОБЛАСТЬ" : "СНОС: ВЫДЕЛИТЕ ОБЛАСТЬ"; break;
         case TK_PLINE: hint = "ЛЭП: ПРОВЕДИТЕ ОТ СТАНЦИИ К ЗОНАМ"; break;
